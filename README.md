@@ -1,61 +1,91 @@
-## 📖 Deskripsi Proyek
+<h1 align="center">🔐 Asymmetric Cryptography Suite</h1>
 
-**Crypto Suite** adalah sebuah perkakas (*toolkit*) kriptografi asimetris yang dirancang khusus untuk kebutuhan edukasi, eksperimen, dan rekayasa kriptografi. Aplikasi ini mengintegrasikan berbagai algoritma enkripsi publik ke dalam satu *dashboard* antarmuka (*Modern Dark Mode*) yang intuitif.
+<p align="center">
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" />
+  <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5" />
+  <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3" />
+  <img src="https://img.shields.io/badge/Font__Awesome-528DD7?style=for-the-badge&logo=font-awesome&logoColor=white" alt="Font Awesome" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License" />
+</p>
 
-Dibangun dengan arsitektur menyerupai *Single Page Application* (SPA) menggunakan metode injeksi `iframe`, seluruh modul berjalan secara independen namun tetap terpusat dalam satu ruang kerja (*workspace*).
-
-**Modul yang Tersedia:**
-* **RSA System:** Pembangkitan kunci (Faktorisasi prima, Euclidean) & Kalkulator Enkripsi/Dekripsi.
-* **Rabin Cryptography:** Enkripsi kunci publik dengan ekstraksi akar kuadrat modulo menggunakan Teorema Sisa Tiongkok (CRT).
-* **Diffie-Hellman:** Simulasi pertukaran kunci rahasia (*Key Exchange*) dan pencarian Logaritma Diskrit.
-* **ElGamal Toolkit:** Kalkulasi lengkap mulai dari enkripsi, dekripsi, hingga Pembangkitan Generator $Z^*_p$ (Akar Primitif).
-
-Keunggulan utama dari *suite* ini adalah **100% Client-Side Processing**. Semua kalkulasi matematis raksasa (menggunakan *BigInt Engine* bawaan JavaScript) dieksekusi langsung di memori *browser* pengguna, sehingga dijamin aman, cepat, dan sepenuhnya *offline*.
+<p align="center">
+  <strong>Sistem Terintegrasi Kalkulator Kriptografi Asimetris Interaktif — 100% Client-Side & Offline-First</strong>
+</p>
 
 ---
 
-## ⚙️ Konfigurasi & Instalasi
+## 📖 Tentang Proyek
 
-Karena proyek ini dibangun murni menggunakan **Vanilla HTML, CSS, dan JavaScript**, tidak ada dependensi eksternal, *package manager* (seperti npm), atau *server backend* yang perlu dikonfigurasi.
+**Asymmetric Cryptography Suite** adalah sebuah platform web terpadu yang menyatukan enam modul kalkulator kriptografi asimetris ke dalam satu ruang kerja (*workspace*) terpusat. Menggunakan pendekatan arsitektur mirip *Single Page Application* (SPA) dengan injeksi `iframe`, aplikasi ini membundel berbagai alat kalkulasi algoritma rumit tanpa menimbulkan konflik penamaan fungsi pada JavaScript induk.
 
-### Persyaratan Sistem
-* *Web Browser* modern (Chrome, Firefox, Safari, atau Edge) yang mendukung fitur `BigInt` JavaScript.
-* (Opsional) Ekstensi *Live Server* di VS Code untuk pengalaman pengembangan yang lebih baik.
+Antarmuka dirancang dengan gaya **Modern SaaS Dark Mode** yang bersih, dilengkapi dengan *collapsible sidebar* yang interaktif, serta implementasi sistem persistensi data berbasis *state-retention* yang tangguh.
 
-### Langkah-langkah Menjalankan Aplikasi
-1. **Kloning Repositori:**
-   Buka terminal Anda dan jalankan perintah berikut:
-   ```bash
-   git clone [https://github.com/ZeRaPhim09/crypto-suite.git](https://github.com/ZeRaPhim09/crypto-suite.git)
+---
 
-   Buka Direktori:
-Masuk ke dalam folder hasil kloning:
+## ✨ Fitur Unggulan
+
+* 🗂️ **Dasbor Terintegrasi:** Menyatukan 6 modul kalkulator kriptografi independen dalam satu halaman navigasi yang mulus.
+* 🔄 **State Retention (Anti-Loss):** Berkat integrasi `localStorage`, aplikasi akan secara otomatis mengingat dan memuat kembali modul kalkulator terakhir yang Anda buka, bahkan setelah halaman di-*refresh*.
+* 🎛️ **Collapsible Sidebar:** Menu navigasi samping dapat dibuka-tutup melalui tombol *toggle* mengambang di pojok kiri atas untuk memberikan ruang kalkulasi yang lebih luas.
+* ⚡ **BigInt Engine Processing:** Mampu memproses perhitungan bilangan bulat raksasa secara akurat langsung di memori *browser* tanpa ketergantungan pada server pihak ketiga.
+* 📱 **Desain Responsif:** Layout dasbor adaptif dan fleksibel saat diakses melalui perangkat komputer maupun layar ponsel cerdas.
+
+---
+
+## 🧩 Modul & Algoritma yang Tersedia
+
+Sistem ini terbagi ke dalam tiga kelompok arsitektur utama:
+
+### 1. Modul Rivest-Shamir-Adleman (RSA)
+* **RSA Keygen (`rsa_keygen.html`):** Demonstrasi proses pencarian nilai parameter kunci dari faktorisasi bilangan modulus $n$ menjadi faktor prima $p$ dan $q$, visualisasi fungsi Totient Euler $\phi(n)$, uji relatif prima eksponen publik $e$, hingga penemuan invers modular eksponen privat $d$ menggunakan *Extended Euclidean Algorithm*.
+* **RSA Calculator (`rsa_main_cal.html`):** Eksekusi proses enkripsi pesan teks/angka menjadi *ciphertext* ($c = m^e \pmod n$) serta fungsi dekripsi dengan fitur pembagian ukuran blok (*block-sizing computation*).
+
+### 2. Modul Rabin Cryptosystem
+* **Rabin Crypto (`rabin_main.html`):** Implementasi algoritma enkripsi asimetris berbasis kuadratik ($c = m^2 \pmod n$) dan proses dekripsi sisa sisa tiongkok (*Chinese Remainder Theorem* - CRT) untuk mengekstrak 4 kandidat akar kuadrat akar murni disertai sistem penyaringan redundansi bit (*tail replication filter*).
+
+### 3. Modul ElGamal & Diffie-Hellman Exchange
+* **Diffie-Hellman (`diffie_hellman.html`):** Simulasi interaktif kesepakatan kunci rahasia bersama (*Shared Secret Key*) antara dua pihak melalui saluran tidak aman, dilengkapi visualisasi kalkulasi logaritma diskrit.
+* **ElGamal Toolkit (`el_gamal_main.html`):** Pembangkitan pasang kunci, kalkulasi parameter enkripsi komponen sepasang $\gamma$ dan $\delta$, serta pemulihan pesan teks menggunakan pembuktian teorema Fermat kecil.
+* **Z\*p Generator (`zp_el_gamal.html`):** Pencari elemen pembangun grup (*primitive root/generator*) menggunakan metode faktorisasi eksponen pengujian berulang.
+
+---
+
+## 📂 Struktur Direktori Repositori
+
+Untuk memastikan fungsionalitas tautan navigasi dasbor bekerja dengan sempurna, seluruh file modul harus berada dalam satu direktori tingkat yang sama sebagai berikut:
+
+```text
+📁 crypto-suite
+├── 📄 index.html             # Dasbor Utama (Sistem Navigasi & Sidebar Toggle)
+├── 📄 rsa_keygen.html        # Modul Pembangkitan Kunci RSA
+├── 📄 rsa_main_cal.html      # Modul Kalkulator Enkripsi/Dekripsi RSA
+├── 📄 rabin_main.html        # Modul Sistem Kriptografi Rabin & CRT
+├── 📄 diffie_hellman.html    # Modul Simulasi Pertukaran Kunci Diffie-Hellman
+├── 📄 el_gamal_main.html     # Modul Toolkit Pemrosesan ElGamal
+└── 📄 zp_el_gamal.html       # Modul Pencari Akar Primitif Grup Z*p
+```
+
+🚀 Panduan Instalasi & Penggunaan
+Proyek ini dibangun murni menggunakan teknologi web native/vanilla tanpa memerlukan backend server (Node.js, PHP, dsb) atau instalasi package manager tambahan.
+
+1. Kloning Repositori:
 
 Bash
-cd crypto-suite
-Jalankan Aplikasi:
-Tidak perlu kompilasi. Anda cukup membuka file index.html langsung ke dalam browser Anda:
+git clone [https://github.com/ZeRaPhim09/MyBread-Website.git](https://github.com/ZeRaPhim09/MyBread-Website.git)
 
-Windows/Linux: Klik ganda (double-click) pada file index.html.
+2. Jalankan Aplikasi:
 
-Mac: Ketik open index.html di terminal.
+Cukup masuk ke folder hasil kloning, lalu klik ganda (double-click) pada file index.html untuk membukanya langsung di browser pilihan Anda.
 
-VS Code: Klik kanan pada index.html dan pilih "Open with Live Server".
+Atau bagi pengguna VS Code, klik kanan pada file index.html lalu pilih "Open with Live Server" untuk mendapatkan pengalaman pengerjaan berkala yang lebih responsif.
 
-⚠️ Catatan Struktur Direktori
-Agar navigasi sidebar berfungsi dengan benar, pastikan file induk (index.html) berada di dalam folder (direktori) yang persis sama dengan file-file modul kalkulatornya:
+👨‍💻 Pengembang
+Dikembangkan oleh Zefanya Raditya Pratama.
 
-rsa_keygen.html
+"Terus mengoptimalkan kapasitas diri: merangkul perubahan, mengeksekusi ide, dan beradaptasi dengan setiap tantangan baru."
 
-rsa_main_cal.html
+🔗 LinkedIn
 
-rabin_main.html
+📝 Medium
 
-diffie_hellman.html
-
-el_gamal_main.html
-
-zp_el_gamal.html
-
-
-Dengan format di atas, siapa pun yang mengunjungi repositori Anda akan langsung mengerti bahwa proyek ini sangat kompleks secara matematis, namun sangat mudah dan ringan untuk di- *deploy*.
+Dibuat untuk keperluan riset, eksperimen akademis, dan portofolio implementasi logika Rekayasa Perangkat Lunak Kripto.
