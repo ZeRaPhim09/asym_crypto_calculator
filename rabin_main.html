@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kriptografi Rabin — Rekayasa Kriptografi (Dark Mode)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    /* Color Palette - Modern Dark Mode (Slate/Zinc) */
+    --bg-page: #0f172a;
+    --bg-card: #1e293b;
+    --bg-input: #020617;
+    --bg-header: #1e293b;
+    
+    --border: #334155;
+    --border-hover: #475569;
+    
+    /* Brand Colors */
+    --primary: #6366f1;
+    --primary-hover: #818cf8;
+    --primary-bg: rgba(99, 102, 241, 0.15);
+    
+    --secondary: #94a3b8;
+    --secondary-bg: #0f172a;
+    
+    /* Accent Colors */
+    --success: #10b981;
+    --success-bg: rgba(16, 185, 129, 0.15);
+    --warning: #f59e0b;
+    --warning-bg: rgba(245, 158, 11, 0.15);
+    --danger: #ef4444;
+    --danger-bg: rgba(239, 68, 68, 0.15);
+    --info: #0ea5e9;
+    --info-bg: rgba(14, 165, 233, 0.15);
+    
+    /* Typography */
+    --text-main: #f8fafc;
+    --text-muted: #cbd5e1;
+    --text-light: #64748b;
+    
+    --font-sans: 'Inter', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-page);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+  }
+  .logo {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--primary), #818cf8);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.025em;
+  }
+  header p { font-size: 0.85rem; color: var(--text-muted); }
+  .badge {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    background: var(--primary-bg);
+    color: var(--primary-hover);
+    border: 1px solid rgba(129, 140, 248, 0.3);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 500;
+  }
+
+  /* TABS (MENU DIGESER KE TENGAH) */
+  .tabs {
+    display: flex;
+    justify-content: center; /* Mengubah posisi menu ke tengah */
+    gap: 2.5rem; /* Memperlebar jarak antar menu */
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-header);
+    padding: 0 2rem;
+  }
+  .tab {
+    padding: 1rem 0.5rem;
+    font-size: 0.95rem; /* Sedikit diperbesar */
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+    user-select: none;
+    margin-bottom: -1px;
+  }
+  .tab:hover { color: var(--text-main); }
+  .tab.active { color: var(--primary-hover); border-bottom-color: var(--primary-hover); }
+
+  /* MAIN LAYOUT */
+  main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+
+  .panel { display: none; animation: fadeIn 0.3s ease; }
+  .panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* SECTION CARD */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+  }
+  .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .card-title::before {
+    content: '';
+    width: 4px; height: 18px;
+    background: var(--primary);
+    border-radius: 4px;
+  }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+
+  /* FORM ELEMENTS */
+  label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+  }
+  input[type=text], input[type=number], textarea, select {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    color: var(--text-main);
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+  input::placeholder { color: var(--text-light); }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-bg);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    font-family: var(--font-sans);
+  }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: #ffffff;
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+  
+  .btn-secondary {
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--border-hover); background: var(--bg-input); }
+  
+  .btn-teal { background: var(--success); color: #ffffff; }
+  .btn-teal:hover { background: #0ea5e9; transform: translateY(-1px); }
+  
+  .btn-coral { background: var(--warning); color: #ffffff; }
+  .btn-coral:hover { opacity: 0.9; transform: translateY(-1px); }
+  
+  .btn-row { display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; }
+
+  /* RESULT DISPLAY */
+  .result-box {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    word-break: break-all;
+    min-height: 52px;
+  }
+  .result-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* STEP LOG */
+  .step-log {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .step-log-header {
+    background: var(--bg-input);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+  .step-log-body {
+    padding: 1rem 1.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  .step {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px dashed var(--border);
+    align-items: flex-start;
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: var(--primary-bg);
+    color: var(--primary-hover);
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-content { flex: 1; }
+  .step-title { font-size: 0.9rem; font-weight: 500; color: var(--text-main); margin-bottom: 0.25rem; }
+  .step-detail { font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-mono); line-height: 1.6; }
+
+  /* ROOT CARDS */
+  .root-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem; }
+  .root-card {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.2s ease;
+  }
+  .root-card.winner {
+    border-color: var(--success);
+    background: var(--success-bg);
+    box-shadow: 0 0 0 1px var(--success);
+  }
+  .root-card.winner .root-badge { background: var(--success); color: #fff; border-color: var(--success); }
+  .root-index {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  .root-value {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+  }
+  .root-binary {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    word-break: break-all;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+  }
+  .root-binary .hi { color: var(--warning); font-weight: bold; }
+  .root-binary .lo { color: var(--info); }
+  .root-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: var(--bg-card);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+  }
+
+  /* ALG PILL */
+  .alg-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-family: var(--font-sans);
+    margin-bottom: 0.75rem;
+    border: 1px solid transparent;
+  }
+  .alg-6-3 { background: var(--danger-bg); color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+  .alg-6-5 { background: var(--info-bg); color: var(--info); border-color: rgba(14, 165, 233, 0.3); }
+  .alg-6-6 { background: var(--warning-bg); color: var(--warning); border-color: rgba(245, 158, 11, 0.3); }
+
+  /* INFO BANNER */
+  .info-banner, .warn-banner, .ok-banner {
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  .info-banner { background: var(--primary-bg); border: 1px solid rgba(99, 102, 241, 0.3); color: var(--primary-hover); }
+  .warn-banner { background: var(--danger-bg); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--danger); }
+  .ok-banner { background: var(--success-bg); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--success); }
+
+  /* KEY TABLE */
+  .kv-table { width: 100%; border-collapse: collapse; background: var(--bg-input); border-radius: 8px; overflow: hidden; }
+  .kv-table td {
+    padding: 1rem;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .kv-table td:first-child { color: var(--text-muted); width: 220px; font-weight: 500; }
+  .kv-table td:last-child { color: var(--text-main); font-family: var(--font-mono); }
+  .kv-table tr:last-child td { border-bottom: none; }
+
+  /* ALGORITHM REFERENCE */
+  .alg-ref {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-sm);
+  }
+  .alg-ref-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .alg-ref-body {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.8;
+    background: var(--bg-input);
+    padding: 1rem;
+    border-radius: 8px;
+  }
+  .alg-ref-body .hi { color: var(--text-main); font-weight: 600; }
+  .alg-ref-body .formula { color: var(--primary-hover); }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2rem 0;
+  }
+
+  /* TEXT COLORS */
+  .text-primary { color: var(--primary-hover); }
+  .text-success { color: var(--success); }
+  .text-warning { color: var(--warning); }
+  .text-danger { color: var(--danger); }
+  .text-info { color: var(--info); }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    header { padding: 1rem; flex-direction: column; text-align: center; }
+    .badge { margin: 0 auto; }
+    .tabs { padding: 0 1rem; overflow-x: auto; white-space: nowrap; justify-content: flex-start; }
+    main { padding: 1rem; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .root-grid { grid-template-columns: 1fr; }
+    .card { padding: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">R</div>
+  <div>
+    <h1>Kriptografi Rabin</h1>
+    <p>Enkripsi Kunci Publik · Algoritma 6.1 – 6.6 · Offline</p>
+  </div>
+  <div class="badge">OFFLINE</div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('keygen')">① Pembangkitan Kunci</div>
+  <div class="tab" onclick="showTab('encrypt')">② Enkripsi</div>
+  <div class="tab" onclick="showTab('decrypt')">③ Dekripsi</div>
+  <div class="tab" onclick="showTab('reference')">Referensi Algoritma</div>
+</div>
+
+<main>
+
+<div class="panel active" id="panel-keygen">
+
+  <div class="card">
+    <div class="card-title">Algoritma 6.1 — Pembangkitan Kunci</div>
+    <div class="info-banner">
+      Masukkan dua bilangan prima p dan q yang berbeda. Program akan otomatis memverifikasi keprimalannya dan menentukan algoritma akar kuadrat yang sesuai untuk masing-masing prima.
+    </div>
+    <div class="grid-2">
+      <div>
+        <label>Bilangan Prima p</label>
+        <input type="number" id="inp-p" value="277" placeholder="contoh: 277">
+        <div class="hint" id="hint-p">— masukkan bilangan prima</div>
+      </div>
+      <div>
+        <label>Bilangan Prima q</label>
+        <input type="number" id="inp-q" value="331" placeholder="contoh: 331">
+        <div class="hint" id="hint-q">— masukkan bilangan prima</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="doKeygen()">⚙ Bangkitkan Kunci</button>
+      <button class="btn btn-secondary" onclick="randomPrimes()">↻ Prima Acak</button>
+    </div>
+  </div>
+
+  <div class="card" id="keygen-result" style="display:none">
+    <div class="card-title">Hasil Pembangkitan Kunci</div>
+    <div class="grid-2">
+      <div>
+        <div class="result-label">Kunci Publik (n)</div>
+        <div class="result-box text-primary" id="out-pubkey" style="font-size:1.2rem; font-weight:600;"></div>
+        <div class="hint">n = p × q — dibagikan ke publik</div>
+      </div>
+      <div>
+        <div class="result-label">Kunci Privat (p, q)</div>
+        <div class="result-box text-danger" id="out-privkey" style="font-size:1.2rem; font-weight:600;"></div>
+        <div class="hint">RAHASIA, jangan dibagikan</div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="card-title">Analisis Modulo Prima</div>
+    <div class="grid-3" id="prime-analysis"></div>
+  </div>
+
+</div>
+
+<div class="panel" id="panel-encrypt">
+
+  <div class="card">
+    <div class="card-title">Algoritma 6.2 — Enkripsi Kunci Publik Rabin</div>
+    <div class="grid-2">
+      <div>
+        <label>Kunci Publik n</label>
+        <input type="number" id="enc-n" placeholder="n = p × q" value="91687">
+        <div class="hint">Gunakan nilai n dari tab Pembangkitan Kunci</div>
+      </div>
+      <div>
+        <label>Bit Redundansi</label>
+        <select id="enc-redbits">
+          <option value="6" selected>6 bit (Replikasi Ekor)</option>
+          <option value="8">8 bit (Replikasi Ekor)</option>
+          <option value="16">16 bit (Replikasi Ekor)</option>
+          <option value="0">Tidak pakai redundansi</option>
+        </select>
+        <div class="hint">Digunakan untuk identifikasi plaintext saat dekripsi</div>
+      </div>
+    </div>
+    <div style="margin-top:1.5rem">
+      <label>Pesan Asli m̄ (Desimal atau Biner)</label>
+      <input type="text" id="enc-msg" value="1001111001" placeholder="contoh: 633 atau 0b1001111001">
+      <div class="hint">Awali dengan '0b' untuk input biner, tanpa prefix dianggap desimal.</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-teal" onclick="doEncrypt()">🔒 Enkripsi Pesan</button>
+    </div>
+  </div>
+
+  <div class="card" id="encrypt-result" style="display:none">
+    <div class="card-title">Hasil Enkripsi</div>
+    <div id="enc-steps"></div>
+    <hr class="divider">
+    <div class="grid-2">
+      <div>
+        <div class="result-label">Ciphertext (c) — Desimal</div>
+        <div class="result-box text-success" id="out-cipher" style="font-size: 1.25rem; font-weight: 600;"></div>
+        <div class="hint">Kirimkan nilai ini ke penerima</div>
+        <div class="result-label" style="margin-top:1.5rem;">Ciphertext (c) — Biner</div>
+        <div class="result-box text-warning" id="out-cipher-bin" style="font-size: 0.85rem; line-height: 1.6;"></div>
+        <div class="hint" id="out-cipher-bin-len"></div>
+      </div>
+      <div>
+        <div class="result-label">Pesan + Redundansi (m) — Desimal</div>
+        <div class="result-box" id="out-m-redund" style="font-size: 1.25rem; font-weight: 600;"></div>
+        <div class="hint">Nilai yang dienkripsi</div>
+        <div class="result-label" style="margin-top:1.5rem;">Pesan + Redundansi (m) — Biner</div>
+        <div class="result-box" id="out-m-bin" style="font-size: 0.85rem; line-height: 1.6;"></div>
+        <div class="hint" id="out-m-bin-len"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="panel" id="panel-decrypt">
+
+  <div class="card">
+    <div class="card-title">Algoritma 6.2 (Dekripsi) + CRT</div>
+    <div class="grid-3">
+      <div>
+        <label>Prima p (Kunci Privat)</label>
+        <input type="number" id="dec-p" value="277">
+      </div>
+      <div>
+        <label>Prima q (Kunci Privat)</label>
+        <input type="number" id="dec-q" value="331">
+      </div>
+      <div>
+        <label>Ciphertext (c)</label>
+        <input type="number" id="dec-c" value="62111">
+      </div>
+    </div>
+    <div style="margin-top:1.5rem">
+      <label>Bit Redundansi (Sesuai Enkripsi)</label>
+      <select id="dec-redbits">
+        <option value="6" selected>6 bit</option>
+        <option value="8">8 bit</option>
+        <option value="16">16 bit</option>
+        <option value="0">Tidak pakai redundansi (tampilkan semua akar)</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-coral" onclick="doDecrypt()">🔓 Dekripsi Ciphertext</button>
+    </div>
+  </div>
+
+  <div id="decrypt-result" style="display:none">
+
+    <div class="card" id="dec-alg-info">
+      <div class="card-title">Pemilihan Algoritma Akar Kuadrat</div>
+      <div id="dec-alg-content"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Log Langkah Dekripsi</div>
+      <div class="step-log">
+        <div class="step-log-header">Detail Perhitungan</div>
+        <div class="step-log-body" id="dec-steplog"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Kandidat Plaintext (4 Akar Kuadrat)</div>
+      <div class="root-grid" id="dec-roots"></div>
+    </div>
+
+    <div class="card" id="dec-final">
+      <div class="card-title">Hasil Dekripsi Akhir</div>
+      <div id="dec-final-content"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="panel" id="panel-reference">
+
+  <div class="card">
+    <div class="card-title">Panduan Algoritma Akar Kuadrat Modulo Prima</div>
+    <div class="info-banner">
+      Program secara otomatis memilih algoritma yang paling efisien berdasarkan sifat kongruensi modulo 4 dan modulo 8 dari bilangan prima p dan q.
+    </div>
+
+    <div class="alg-ref" style="border-left: 4px solid var(--info);">
+      <div class="alg-ref-title"><span class="alg-pill alg-6-5">Alg 6.5</span> p ≡ 3 (mod 4) &nbsp;→&nbsp; Metode Langsung</div>
+      <div class="alg-ref-body">
+        Syarat: <span class="hi">p mod 4 == 3</span><br>
+        Langkah 1: Hitung <span class="formula">r = c^((p+1)/4) mod p</span><br>
+        Langkah 2: Kembalikan akar <span class="formula">(r, −r mod p)</span><br>
+        <br>
+        <em>Contoh:</em> p = 331 → 331 mod 4 = 3.<br>
+        r = 62111^83 mod 331 = <span class="hi">144</span>. Akar: (144, 187).
+      </div>
+    </div>
+
+    <div class="alg-ref" style="border-left: 4px solid var(--warning);">
+      <div class="alg-ref-title"><span class="alg-pill alg-6-6">Alg 6.6</span> p ≡ 5 (mod 8) &nbsp;→&nbsp; Kasus Khusus</div>
+      <div class="alg-ref-body">
+        Syarat: <span class="hi">p mod 8 == 5</span><br>
+        Langkah 1: Hitung <span class="formula">d = c^((p−1)/4) mod p</span><br>
+        Langkah 2a: Jika d = 1 → <span class="formula">r = c^((p+3)/8) mod p</span><br>
+        Langkah 2b: Jika d = p−1 → <span class="formula">r = 2c·(4c)^((p−5)/8) mod p</span><br>
+        Langkah 3: Kembalikan akar <span class="formula">(r, −r mod p)</span>
+      </div>
+    </div>
+
+    <div class="alg-ref" style="border-left: 4px solid var(--danger);">
+      <div class="alg-ref-title"><span class="alg-pill alg-6-3">Alg 6.3</span> Kasus Umum (Fallback)</div>
+      <div class="alg-ref-body">
+        Syarat: Tidak memenuhi kondisi di atas (p ≡ 1 mod 8). Menggunakan polinomial.<br>
+        Langkah 1: Cari <span class="formula">b</span> acak hingga <span class="formula">(b²−4c)/p = −1</span> (Quadratic Non-Residue).<br>
+        Langkah 2: Definisikan polinomial <span class="formula">f(x) = x²−bx+c</span>.<br>
+        Langkah 3: Hitung <span class="formula">r = x^((p+1)/2) mod f(x)</span>.<br>
+        Langkah 4: Kembalikan akar <span class="formula">(r, −r mod p)</span>.
+      </div>
+    </div>
+
+    <div class="alg-ref" style="border-left: 4px solid var(--primary);">
+      <div class="alg-ref-title">Teorema Sisa Tiongkok (CRT)</div>
+      <div class="alg-ref-body">
+        Menggabungkan akar mod p (r, -r) dan akar mod q (s, -s) menjadi mod n:<br>
+        1. Gunakan Extended Euclidean untuk mencari koefisien c, d sehingga <span class="formula">c·p + d·q = 1</span>.<br>
+        2. Akar 1: <span class="formula">x = (r·d·q + s·c·p) mod n</span><br>
+        3. Akar 2: <span class="formula">y = (r·d·q − s·c·p) mod n</span><br>
+        4. Empat akar yang dihasilkan: <span class="formula">x, −x mod n, y, −y mod n</span>.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</main>
+
+<script>
+// ============================================================
+// MATEMATIKA RABIN (TIDAK DIUBAH)
+// ============================================================
+
+function isPrime(n) {
+  if (n < 2) return false;
+  if (n === 2) return true;
+  if (n % 2 === 0) return false;
+  for (let i = 3; i * i <= n; i += 2)
+    if (n % i === 0) return false;
+  return true;
+}
+
+function nextPrime(n) {
+  let x = n + 1;
+  while (!isPrime(x)) x++;
+  return x;
+}
+
+function extGcd(a, b) {
+  if (b === 0n) return [a, 1n, 0n];
+  const [g, x, y] = extGcd(b, a % b);
+  return [g, y, x - (a / b) * y];
+}
+
+function modInverse(a, m) {
+  const [, x] = extGcd(BigInt(a), BigInt(m));
+  return ((x % BigInt(m)) + BigInt(m)) % BigInt(m);
+}
+
+function legendre(a, p) {
+  const P = BigInt(p), A = ((BigInt(a) % P) + P) % P;
+  const res = modPow(A, (P - 1n) / 2n, P);
+  return res === P - 1n ? -1 : Number(res);
+}
+
+function modPow(base, exp, mod) {
+  let result = 1n;
+  base = base % mod;
+  while (exp > 0n) {
+    if (exp % 2n === 1n) result = result * base % mod;
+    base = base * base % mod;
+    exp /= 2n;
+  }
+  return result;
+}
+
+function polyMulMod(A, B, bCoef, aCoef, p) {
+  const P = BigInt(p), b = BigInt(bCoef), a = BigInt(aCoef);
+  const [a0, a1] = [BigInt(A[0]), BigInt(A[1])];
+  const [b0, b1] = [BigInt(B[0]), BigInt(B[1])];
+  const c0 = ((a0*b0 - a1*b1*a) % P + P) % P;
+  const c1 = ((a0*b1 + a1*b0 + a1*b1*b) % P + P) % P;
+  return [Number(c0), Number(c1)];
+}
+
+function polyPowMod(exp, bCoef, aCoef, p) {
+  let result = [1, 0];
+  let base = [0, 1];
+  let e = exp;
+  while (e > 0) {
+    if (e % 2 === 1) result = polyMulMod(result, base, bCoef, aCoef, p);
+    base = polyMulMod(base, base, bCoef, aCoef, p);
+    e = Math.floor(e / 2);
+  }
+  return result;
+}
+
+function sqrtAlg63(c, p, steps) {
+  const a = ((c % p) + p) % p;
+  let foundB = null;
+  for (let b = 2; b < p; b++) {
+    const disc = ((b*b - 4*a) % p + p) % p;
+    const leg = legendre(disc, p);
+    if (steps) steps.push({ b, disc, leg });
+    if (leg === -1) { foundB = b; break; }
+  }
+  const exp = Math.floor((p + 1) / 2);
+  const res = polyPowMod(exp, foundB, a, p);
+  const r = res[0];
+  return { r, negR: (((-r) % p) + p) % p, b: foundB, alg: '6.3' };
+}
+
+function sqrtAlg65(c, p) {
+  const exp = BigInt(Math.floor((p + 1) / 4));
+  const r = Number(modPow(BigInt(c), exp, BigInt(p)));
+  return { r, negR: (((-r) % p) + p) % p, alg: '6.5' };
+}
+
+function sqrtAlg66(c, p) {
+  const a = ((c % p) + p) % p;
+  const P = BigInt(p), A = BigInt(a);
+  const d = modPow(A, (P - 1n) / 4n, P);
+  let r;
+  let branch;
+  if (d === 1n) {
+    r = Number(modPow(A, (P + 3n) / 8n, P));
+    branch = 1;
+  } else {
+    r = Number((2n * A * modPow(4n * A, (P - 5n) / 8n, P)) % P);
+    branch = 2;
+  }
+  return { r, negR: (((-r) % p) + p) % p, d: Number(d), branch, alg: '6.6' };
+}
+
+function getSqrtModPrime(c, p, steps) {
+  if (p % 4 === 3) return sqrtAlg65(c, p);
+  if (p % 8 === 5) return sqrtAlg66(c, p);
+  return sqrtAlg63(c, p, steps);
+}
+
+function algInfo(alg) {
+  if (alg === '6.5') return { cls: 'alg-6-5', label: 'Algoritma 6.5', cond: 'p ≡ 3 (mod 4)' };
+  if (alg === '6.6') return { cls: 'alg-6-6', label: 'Algoritma 6.6', cond: 'p ≡ 5 (mod 8)' };
+  return { cls: 'alg-6-3', label: 'Algoritma 6.3', cond: 'Umum (fallback)' };
+}
+
+function rabinDecrypt(c, p, q) {
+  const n = p * q;
+  const stepsP = [], stepsQ = [];
+  const resP = getSqrtModPrime(c, p, stepsP);
+  const resQ = getSqrtModPrime(c, q, stepsQ);
+
+  const [, cpBig, dqBig] = extGcd(BigInt(p), BigInt(q));
+  const cp = Number(((cpBig % BigInt(n)) + BigInt(n)) % BigInt(n));
+  const dq = Number(((dqBig % BigInt(n)) + BigInt(n)) % BigInt(n));
+
+  const r = resP.r, s = resQ.r;
+  const P = BigInt(p), Q = BigInt(q), N = BigInt(n);
+  const R = BigInt(r), S = BigInt(s);
+  const CPb = ((cpBig % N) + N) % N;
+  const DQb = ((dqBig % N) + N) % N;
+
+  const xBig = (R * DQb * Q + S * CPb * P) % N;
+  const yBig = ((R * DQb * Q - S * CPb * P) % N + N) % N;
+  const x = Number(xBig), y = Number(yBig);
+  const roots = [x, (((-x) % n) + n) % n, y, (((-y) % n) + n) % n];
+  const unique = [...new Set(roots)].sort((a,b)=>a-b);
+
+  return {
+    roots: unique, resP, resQ,
+    cp: Number(((cpBig % BigInt(p*q)) + BigInt(p*q)) % BigInt(p*q)),
+    dq: Number(((dqBig % BigInt(p*q)) + BigInt(p*q)) % BigInt(p*q)),
+    cpRaw: Number(cpBig), dqRaw: Number(dqBig),
+    x, y, n, stepsP, stepsQ
+  };
+}
+
+function addRedundancy(m, bits) {
+  if (bits === 0) return m;
+  const b = m.toString(2);
+  const last = b.length >= bits ? b.slice(-bits) : b.padStart(bits, '0').slice(-bits);
+  return parseInt(b + last, 2);
+}
+
+function checkRedundancy(m, bits) {
+  if (bits === 0) return true;
+  const b = m.toString(2);
+  if (b.length < bits * 2) return false;
+  return b.slice(-bits) === b.slice(-2*bits, -bits);
+}
+
+function stripRedundancy(m, bits) {
+  if (bits === 0) return m;
+  const b = m.toString(2);
+  return parseInt(b.slice(0, -bits), 2);
+}
+
+function highlightBinary(m, bits) {
+  const b = m.toString(2);
+  if (bits === 0 || b.length < bits * 2) return `<span>${b}</span>`;
+  const head = b.slice(0, -2*bits);
+  const mid = b.slice(-2*bits, -bits);
+  const tail = b.slice(-bits);
+  return `${head}<span class="hi">${mid}</span><span class="lo">${tail}</span>`;
+}
+
+// ============================================================
+// UI LOGIC
+// ============================================================
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const names = ['keygen','encrypt','decrypt','reference'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+function doKeygen() {
+  const p = parseInt(document.getElementById('inp-p').value);
+  const q = parseInt(document.getElementById('inp-q').value);
+  const hintP = document.getElementById('hint-p');
+  const hintQ = document.getElementById('hint-q');
+  let ok = true;
+
+  if (!isPrime(p)) {
+    hintP.innerHTML = '<span class="text-danger">✗ Bukan bilangan prima!</span>';
+    ok = false;
+  } else hintP.innerHTML = `<span class="text-success">✓ Prima</span> · p mod 4 = ${p%4} · p mod 8 = ${p%8}`;
+
+  if (!isPrime(q)) {
+    hintQ.innerHTML = '<span class="text-danger">✗ Bukan bilangan prima!</span>';
+    ok = false;
+  } else hintQ.innerHTML = `<span class="text-success">✓ Prima</span> · q mod 4 = ${q%4} · q mod 8 = ${q%8}`;
+
+  if (p === q) {
+    hintQ.innerHTML = '<span class="text-danger">✗ p dan q harus berbeda!</span>';
+    ok = false;
+  }
+  if (!ok) return;
+
+  const n = p * q;
+  document.getElementById('out-pubkey').textContent = `${n}`;
+  document.getElementById('out-privkey').textContent = `( ${p}, ${q} )`;
+
+  function algForPrime(x) {
+    if (x % 4 === 3) return algInfo('6.5');
+    if (x % 8 === 5) return algInfo('6.6');
+    return algInfo('6.3');
+  }
+  
+  const infoP = algForPrime(p), infoQ = algForPrime(q);
+  document.getElementById('prime-analysis').innerHTML = `
+    <div>
+      <div class="result-label">Analisis p = ${p}</div>
+      <div class="result-box">
+        mod 4 = ${p%4}<br>mod 8 = ${p%8}<br>
+        <span class="alg-pill ${infoP.cls}" style="margin-top:0.5rem">${infoP.label}</span>
+      </div>
+    </div>
+    <div>
+      <div class="result-label">Analisis q = ${q}</div>
+      <div class="result-box">
+        mod 4 = ${q%4}<br>mod 8 = ${q%8}<br>
+        <span class="alg-pill ${infoQ.cls}" style="margin-top:0.5rem">${infoQ.label}</span>
+      </div>
+    </div>
+    <div>
+      <div class="result-label">Modulus N</div>
+      <div class="result-box text-primary" style="font-size:1.2rem; font-weight:600">${n}<br>
+        <span style="font-size:0.8rem; color:var(--text-muted); font-weight:400">= ${p} × ${q}</span>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('enc-n').value = n;
+  document.getElementById('dec-p').value = p;
+  document.getElementById('dec-q').value = q;
+  document.getElementById('keygen-result').style.display = 'block';
+}
+
+const SMALL_PRIMES = [101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283];
+function randomPrimes() {
+  const idx1 = Math.floor(Math.random() * SMALL_PRIMES.length);
+  let idx2;
+  do { idx2 = Math.floor(Math.random() * SMALL_PRIMES.length); } while (idx2 === idx1);
+  document.getElementById('inp-p').value = SMALL_PRIMES[idx1];
+  document.getElementById('inp-q').value = SMALL_PRIMES[idx2];
+  doKeygen();
+}
+
+function doEncrypt() {
+  const nVal = parseInt(document.getElementById('enc-n').value);
+  const bits = parseInt(document.getElementById('enc-redbits').value);
+  let msgRaw = document.getElementById('enc-msg').value.trim();
+
+  let mBar;
+  if (msgRaw.startsWith('0b') || msgRaw.startsWith('0B')) {
+    mBar = parseInt(msgRaw.slice(2), 2);
+  } else if (/^[01]+$/.test(msgRaw) && msgRaw.length > 6) {
+    mBar = parseInt(msgRaw, 2);
+  } else {
+    mBar = parseInt(msgRaw);
+  }
+
+  if (isNaN(mBar) || isNaN(nVal)) {
+    alert('Periksa input: n dan pesan harus valid desimal/biner!'); return;
+  }
+
+  const m = addRedundancy(mBar, bits);
+  const c = Number(modPow(BigInt(m), 2n, BigInt(nVal)));
+
+  const stepsHtml = `
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Pesan asli (m̄)</div>
+        <div class="step-detail">Desimal: ${mBar}<br>Biner: ${mBar.toString(2)}</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Tambahkan redundansi ${bits} bit (Replikasi Ekor)</div>
+        <div class="step-detail">
+          Ambil ${bits} bit terakhir biner m̄: <span class="text-warning">${mBar.toString(2).slice(-bits)}</span><br>
+          m = m̄ ++ [ekor] = ${mBar.toString(2)}<span class="text-info">${mBar.toString(2).slice(-bits)}</span><br>
+          m desimal = ${m}
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Hitung Enkripsi: c = m² mod n</div>
+        <div class="step-detail">${m}² mod ${nVal} = ${m*m} mod ${nVal} = <strong class="text-success">${c}</strong><br>
+        Biner c: <span class="text-muted">${c.toString(2)}</span></div>
+      </div>
+    </div>
+  `;
+
+  function formatBinary(n, groupSize = 4) {
+    const b = n.toString(2);
+    const pad = (groupSize - (b.length % groupSize)) % groupSize;
+    const padded = '0'.repeat(pad) + b;
+    const groups = [];
+    for (let i = 0; i < padded.length; i += groupSize) {
+      groups.push(padded.slice(i, i + groupSize));
+    }
+    return groups.join(' ');
+  }
+
+  const cBin = c.toString(2);
+  const mBin = m.toString(2);
+
+  document.getElementById('enc-steps').innerHTML = `<div class="step-log"><div class="step-log-header">Log Proses Enkripsi</div><div class="step-log-body">${stepsHtml}</div></div>`;
+  document.getElementById('out-cipher').textContent = c;
+  document.getElementById('out-cipher-bin').textContent = formatBinary(c);
+  document.getElementById('out-cipher-bin-len').textContent = `Panjang: ${cBin.length} bit`;
+  document.getElementById('out-m-redund').textContent = m;
+  document.getElementById('out-m-bin').innerHTML = highlightBinary(m, bits);
+  document.getElementById('out-m-bin-len').textContent = `Panjang: ${mBin.length} bit`;
+  document.getElementById('encrypt-result').style.display = 'block';
+
+  document.getElementById('dec-c').value = c;
+}
+
+function doDecrypt() {
+  const p = parseInt(document.getElementById('dec-p').value);
+  const q = parseInt(document.getElementById('dec-q').value);
+  const c = parseInt(document.getElementById('dec-c').value);
+  const bits = parseInt(document.getElementById('dec-redbits').value);
+
+  if (!isPrime(p) || !isPrime(q) || p === q) {
+    alert('Nilai p dan q harus bilangan prima dan berbeda!'); return;
+  }
+
+  const res = rabinDecrypt(c, p, q);
+  const n = p * q;
+
+  const infoP = algInfo(res.resP.alg);
+  const infoQ = algInfo(res.resQ.alg);
+
+  let algHtml = `
+    <div class="grid-2">
+      <div>
+        <div class="result-label">Mod p = ${p}</div>
+        <div class="result-box">
+          <span class="alg-pill ${infoP.cls}">${infoP.label} — ${infoP.cond}</span><br>
+  `;
+  if (res.resP.alg === '6.5') {
+    algHtml += `r = c^((p+1)/4) mod p = ${c}^${Math.floor((p+1)/4)} mod ${p} = <strong class="text-info">${res.resP.r}</strong>`;
+  } else if (res.resP.alg === '6.6') {
+    algHtml += `d = c^((p−1)/4) mod p = ${res.resP.d}<br>Branch ${res.resP.branch}: r = <strong class="text-warning">${res.resP.r}</strong>`;
+  } else {
+    algHtml += `b = ${res.resP.b}, r = <strong class="text-danger">${res.resP.r}</strong>`;
+  }
+  algHtml += `<br><span class="text-muted">Akar: (${res.resP.r}, ${res.resP.negR})</span></div></div>`;
+
+  algHtml += `
+      <div>
+        <div class="result-label">Mod q = ${q}</div>
+        <div class="result-box">
+          <span class="alg-pill ${infoQ.cls}">${infoQ.label} — ${infoQ.cond}</span><br>
+  `;
+  if (res.resQ.alg === '6.5') {
+    algHtml += `s = c^((q+1)/4) mod q = ${c}^${Math.floor((q+1)/4)} mod ${q} = <strong class="text-info">${res.resQ.r}</strong>`;
+  } else if (res.resQ.alg === '6.6') {
+    algHtml += `d = ${res.resQ.d}, branch ${res.resQ.branch}: s = <strong class="text-warning">${res.resQ.r}</strong>`;
+  } else {
+    algHtml += `b = ${res.resQ.b}, s = <strong class="text-danger">${res.resQ.r}</strong>`;
+  }
+  algHtml += `<br><span class="text-muted">Akar: (${res.resQ.r}, ${res.resQ.negR})</span></div></div></div>`;
+  document.getElementById('dec-alg-content').innerHTML = algHtml;
+
+  const cpRaw = Number(((extGcd(BigInt(p), BigInt(q))[1] % BigInt(n)) + BigInt(n)) % BigInt(n));
+  const dqRaw = Number(((extGcd(BigInt(p), BigInt(q))[2] % BigInt(n)) + BigInt(n)) % BigInt(n));
+  const x = res.x, y = res.y;
+
+  const logHtml = `
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Akar mod p = ${p} (${infoP.label})</div>
+        <div class="step-detail">r = ${res.resP.r},  −r mod p = ${res.resP.negR}</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Akar mod q = ${q} (${infoQ.label})</div>
+        <div class="step-detail">s = ${res.resQ.r},  −s mod q = ${res.resQ.negR}</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Extended Euclidean: c·p + d·q = 1</div>
+        <div class="step-detail">
+          cp = ${res.cpRaw}  (mod n → ${cpRaw})<br>
+          dq = ${res.dqRaw}  (mod n → ${dqRaw})<br>
+          Cek: ${res.cpRaw} × ${p} + ${res.dqRaw} × ${q} = ${res.cpRaw*p + res.dqRaw*q}
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">Chinese Remainder Theorem (CRT)</div>
+        <div class="step-detail">
+          x = (r·dq·q + s·cp·p) mod n<br>
+          x = (${res.resP.r}·${dqRaw}·${q} + ${res.resQ.r}·${cpRaw}·${p}) mod ${n} = <strong class="text-primary">${x}</strong><br><br>
+          y = (r·dq·q − s·cp·p) mod n<br>
+          y = <strong class="text-primary">${y}</strong>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <div class="step-title">Empat akar kuadrat mod n</div>
+        <div class="step-detail">±x mod n = ${x}, ${(((-x)%n)+n)%n}<br>±y mod n = ${y}, ${(((-y)%n)+n)%n}</div>
+      </div>
+    </div>
+  `;
+  document.getElementById('dec-steplog').innerHTML = logHtml;
+
+  let rootsHtml = '';
+  let winner = null;
+  res.roots.forEach((root, i) => {
+    const isRed = checkRedundancy(root, bits);
+    if (isRed && winner === null) winner = root;
+    const isWinner = isRed && bits > 0;
+    rootsHtml += `
+      <div class="root-card ${isWinner ? 'winner' : ''}">
+        <div class="root-index">Akar m${i+1}</div>
+        <div class="root-value">${root}</div>
+        <div class="root-binary">${highlightBinary(root, bits)}</div>
+        <span class="root-badge">${isWinner ? '✓ Redundansi Cocok' : (bits===0 ? 'Tanpa Filter' : '✗ Redundansi Salah')}</span>
+        <div class="hint" style="margin-top:0.5rem">Cek: ${root}² mod ${n} = ${Number(modPow(BigInt(root), 2n, BigInt(n)))}</div>
+      </div>
+    `;
+  });
+  document.getElementById('dec-roots').innerHTML = rootsHtml;
+
+  let finalHtml;
+  if (bits === 0) {
+    finalHtml = `<div class="info-banner">Redundansi tidak diaktifkan. Silakan pilih satu dari 4 akar secara manual di atas.</div>`;
+  } else if (winner !== null) {
+    const original = stripRedundancy(winner, bits);
+    finalHtml = `
+      <div class="ok-banner"><strong>✓ Sukses!</strong> Plaintext berhasil diidentifikasi menggunakan redundansi ${bits}-bit.</div>
+      <table class="kv-table">
+        <tr><td>m (dengan redundansi)</td><td>${winner}  =  ${winner.toString(2)}</td></tr>
+        <tr><td>m̄ (pesan asli)</td><td><strong class="text-success" style="font-size:1.2rem">${original}</strong>  =  ${original.toString(2)}</td></tr>
+      </table>
+    `;
+  } else {
+    finalHtml = `<div class="warn-banner"><strong>✗ Gagal Identifikasi:</strong> Tidak ada akar yang memiliki pola redundansi ${bits}-bit yang valid. Ciphertext mungkin rusak atau bit salah.</div>`;
+  }
+  document.getElementById('dec-final-content').innerHTML = finalHtml;
+  document.getElementById('decrypt-result').style.display = 'block';
+}
+
+// Init
+doKeygen();
+</script>
+</body>
+</html>

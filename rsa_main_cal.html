@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RSA Calculator | Modern Dark</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    /* Modern Dark Theme (Zinc/Slate base) */
+    --bg: #09090b;
+    --surface: #18181b;
+    --surface-hover: #27272a;
+    --surface-active: #3f3f46;
+    
+    /* Accents */
+    --accent-1: #06b6d4; /* Cyan */
+    --accent-2: #6366f1; /* Indigo */
+    --accent-glow: rgba(99, 102, 241, 0.2);
+    
+    /* Borders & Text */
+    --border: #27272a;
+    --border-light: rgba(255, 255, 255, 0.1);
+    --text-main: #fafafa;
+    --text-muted: #a1a1aa;
+    --text-dim: #71717a;
+    
+    /* Status */
+    --error-bg: rgba(239, 68, 68, 0.1);
+    --error-border: rgba(239, 68, 68, 0.3);
+    --error-text: #f87171;
+    
+    --success-text: #34d399;
+
+    /* Fonts & Radii */
+    --font-sans: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+  }
+
+  html { 
+    background: var(--bg); 
+    color: var(--text-main); 
+    font-family: var(--font-sans); 
+    font-size: 15px; 
+    line-height: 1.6; 
+  }
+
+  /* Subtly glowing background */
+  body { 
+    min-height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    padding: 3rem 1rem 5rem;
+    position: relative;
+    overflow-x: hidden;
+  }
+  
+  body::before {
+    content: '';
+    position: absolute;
+    top: -150px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* Header */
+  .page-header { text-align: center; margin-bottom: 2.5rem; }
+  
+  .badge { 
+    display: inline-flex; align-items: center; gap: 8px; 
+    background: rgba(6, 182, 212, 0.1); 
+    border: 1px solid rgba(6, 182, 212, 0.2); 
+    border-radius: 30px; padding: 6px 16px; 
+    font-size: 12px; font-weight: 600; color: var(--accent-1); 
+    font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 1.2rem; 
+  }
+  
+  .page-title { 
+    font-size: 2.5rem; font-weight: 700; letter-spacing: -1px; 
+    color: var(--text-main); margin-bottom: 0.5rem; 
+  }
+  .page-title span { 
+    background: linear-gradient(to right, var(--accent-1), var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .page-sub { font-size: 15px; color: var(--text-muted); }
+
+  /* Main Card */
+  .card { 
+    background: var(--surface); 
+    border: 1px solid var(--border-light); 
+    border-radius: var(--radius-lg); 
+    padding: 32px; width: 100%; max-width: 640px; 
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+  }
+
+  /* Segmented Tabs */
+  .tab-row { 
+    display: flex; background: #000; 
+    border-radius: var(--radius-md); padding: 5px; 
+    margin-bottom: 24px; border: 1px solid var(--border);
+  }
+  
+  .tab-btn { 
+    flex: 1; padding: 12px; font-size: 14px; font-weight: 600; 
+    font-family: var(--font-sans); cursor: pointer; 
+    background: transparent; color: var(--text-muted); 
+    border: none; border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center; gap: 8px; 
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+  }
+  .tab-btn svg { width: 18px; height: 18px; stroke-width: 2; opacity: 0.7; }
+  .tab-btn:hover:not(.active) { color: var(--text-main); }
+  .tab-btn.active { 
+    background: var(--surface); color: var(--text-main); 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
+  }
+  .tab-btn.active svg { opacity: 1; color: var(--accent-1); }
+
+  /* Formula Bar */
+  .formula-bar { display: flex; gap: 10px; margin-bottom: 24px; }
+  .f-pill { 
+    font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+    padding: 6px 14px; border-radius: 20px; 
+    background: var(--surface-hover); border: 1px solid var(--border); 
+    color: var(--text-dim); transition: all 0.2s; 
+  }
+  .f-pill.on { 
+    background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.3); 
+    color: var(--accent-2); 
+  }
+
+  /* Form Elements */
+  .field { margin-bottom: 20px; }
+  .label { 
+    font-size: 12px; font-weight: 600; font-family: var(--font-sans); 
+    color: var(--text-muted); display: block; margin-bottom: 8px; 
+  }
+  
+  textarea, input[type=text], input[type=number] {
+    width: 100%; font-family: var(--font-mono); font-size: 14px; padding: 14px 16px;
+    background: #000; border: 1px solid var(--border); border-radius: var(--radius-md);
+    color: var(--text-main); outline: none; transition: all 0.2s;
+  }
+  
+  textarea::placeholder, input::placeholder { color: var(--text-dim); }
+  textarea:focus, input:focus { 
+    border-color: var(--accent-2); 
+    box-shadow: 0 0 0 3px var(--accent-glow); 
+  }
+  textarea { resize: vertical; min-height: 100px; }
+  
+  input[type=number] { -moz-appearance: textfield; }
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .hint { font-size: 12px; color: var(--text-dim); margin-top: 8px; line-height: 1.4; }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+  /* Primary Button */
+  .calc-btn {
+    width: 100%; padding: 16px; font-size: 15px; font-weight: 600; font-family: var(--font-sans);
+    cursor: pointer; border-radius: var(--radius-md); 
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); 
+    color: #fff; border: none; display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin: 10px 0 24px; transition: all 0.2s; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  }
+  .calc-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4); filter: brightness(1.1); }
+  .calc-btn:active { transform: translateY(0); scale: 0.98; }
+  .calc-btn svg { width: 18px; height: 18px; stroke-width: 2.5; }
+
+  /* Alerts */
+  .err-card { 
+    background: var(--error-bg); border: 1px solid var(--error-border); border-radius: var(--radius-md); 
+    padding: 14px 16px; font-size: 13.5px; font-weight: 500; color: var(--error-text); 
+    display: none; align-items: flex-start; gap: 10px; margin-bottom: 20px; 
+  }
+  .err-card svg { width: 18px; height: 18px; stroke-width: 2; flex-shrink: 0; }
+
+  /* Output Cards */
+  .result-card, .steps-card { 
+    background: #000; border: 1px solid var(--border); border-radius: var(--radius-md); 
+    overflow: hidden; margin-bottom: 16px; display: none; 
+  }
+  
+  .result-head { 
+    display: flex; justify-content: space-between; align-items: center; 
+    padding: 12px 18px; border-bottom: 1px solid var(--border); background: var(--surface); 
+  }
+  
+  .res-label, .steps-title { 
+    font-size: 13px; font-weight: 600; color: var(--text-main); font-family: var(--font-sans); 
+    display: flex; align-items: center; gap: 8px; 
+  }
+  .res-label svg, .steps-title svg { width: 16px; height: 16px; color: var(--accent-1); }
+  
+  .copy-btn { 
+    font-size: 12px; font-weight: 500; font-family: var(--font-sans); padding: 6px 12px; 
+    cursor: pointer; border-radius: 6px; background: var(--surface-hover); border: 1px solid var(--border-light); 
+    color: var(--text-main); display: flex; align-items: center; gap: 6px; transition: all 0.2s; 
+  }
+  .copy-btn:hover { background: var(--surface-active); color: #fff; }
+  
+  .result-body { 
+    padding: 18px; font-family: var(--font-mono); font-size: 14px; font-weight: 500;
+    word-break: break-all; color: var(--accent-1); white-space: pre-wrap; 
+    max-height: 200px; overflow-y: auto; line-height: 1.6; 
+  }
+
+  .steps-card { padding: 0; }
+  .steps-title { padding: 12px 18px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .steps-body { 
+    padding: 18px; font-family: var(--font-mono); font-size: 13px; 
+    color: var(--text-muted); line-height: 1.8; white-space: pre-wrap; 
+  }
+
+  .block-section { display: none; }
+
+  .footer { 
+    margin-top: 40px; font-size: 13px; color: var(--text-dim); 
+    font-family: var(--font-sans); text-align: center; 
+  }
+
+  /* Custom Scrollbar for results */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface-active); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  @media (max-width: 500px) {
+    .row2 { grid-template-columns: 1fr; gap: 20px; }
+    .page-title { font-size: 2rem; }
+    .card { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="badge">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+    RSA Cryptography
+  </div>
+  <h1 class="page-title">RSA <span>Calculator</span></h1>
+  <p class="page-sub">Enkripsi &amp; dekripsi bilangan besar secara aman dan offline</p>
+</div>
+
+<div class="card">
+
+  <div class="tab-row">
+    <button class="tab-btn active" id="tab-enc" onclick="setMode('enc')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Enkripsi
+    </button>
+    <button class="tab-btn" id="tab-dec" onclick="setMode('dec')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+      Dekripsi
+    </button>
+  </div>
+
+  <div class="formula-bar">
+    <div class="f-pill on" id="pill-enc">c = m^e mod n</div>
+    <div class="f-pill" id="pill-dec">m = c^d mod n</div>
+  </div>
+
+  <div class="field">
+    <span class="label" id="lbl-msg">Pesan / Plaintext (m)</span>
+    <textarea id="inp-msg" placeholder="Masukkan bilangan pesan (angka)..."></textarea>
+  </div>
+
+  <div class="row2">
+    <div class="field">
+      <span class="label" id="lbl-exp">Eksponen publik (e)</span>
+      <input id="inp-exp" type="text" placeholder="Contoh: 65537" />
+    </div>
+    <div class="field">
+      <span class="label">Modulus (n)</span>
+      <input id="inp-n" type="text" placeholder="Contoh: 1022117" />
+    </div>
+  </div>
+
+  <div class="block-section" id="block-section">
+    <hr class="divider" />
+    <div class="field">
+      <span class="label">Ukuran blok (digit per blok)</span>
+      <input id="inp-block" type="number" min="1" max="30" value="7" style="width:140px;" />
+      <p class="hint">Jumlah pemisahan digit untuk ciphertext panjang. Biarkan 0 jika diproses 1 blok penuh.</p>
+    </div>
+    <hr class="divider" />
+  </div>
+
+  <button class="calc-btn" onclick="calculate()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l5 5l10 -10"/></svg>
+    <span id="btn-label">Jalankan Enkripsi</span>
+  </button>
+
+  <div class="err-card" id="err-card">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span id="err-msg"></span>
+  </div>
+
+  <div class="result-card" id="result-card">
+    <div class="result-head">
+      <span class="res-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span id="res-label">Ciphertext Output (c)</span>
+      </span>
+      <button class="copy-btn" id="copy-btn" onclick="copyResult()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Salin
+      </button>
+    </div>
+    <div class="result-body" id="res-body"></div>
+  </div>
+
+  <div class="steps-card" id="steps-card">
+    <div class="steps-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Langkah Perhitungan
+    </div>
+    <div class="steps-body" id="steps-body"></div>
+  </div>
+
+</div>
+
+<div class="footer">Client-Side RSA Processing · BigInt Engine · Secure & Offline</div>
+
+<script>
+let mode = 'enc';
+
+function setMode(m) {
+  mode = m;
+  const e = m === 'enc';
+  document.getElementById('tab-enc').className = 'tab-btn' + (e ? ' active' : '');
+  document.getElementById('tab-dec').className = 'tab-btn' + (!e ? ' active' : '');
+  document.getElementById('pill-enc').className = 'f-pill' + (e ? ' on' : '');
+  document.getElementById('pill-dec').className = 'f-pill' + (!e ? ' on' : '');
+  document.getElementById('lbl-msg').textContent = e ? 'Pesan / Plaintext (m)' : 'Data Ciphertext (c)';
+  document.getElementById('lbl-exp').textContent = e ? 'Eksponen publik (e)' : 'Eksponen privat (d)';
+  document.getElementById('inp-msg').placeholder = e ? 'Masukkan bilangan pesan (angka)...' : 'Masukkan rentetan ciphertext...';
+  document.getElementById('inp-exp').placeholder = e ? 'Contoh: 65537' : 'Contoh: 832193';
+  document.getElementById('btn-label').textContent = e ? 'Jalankan Enkripsi' : 'Jalankan Dekripsi';
+  document.getElementById('block-section').style.display = e ? 'none' : 'block';
+  clearOut();
+}
+
+function clearOut() {
+  document.getElementById('err-card').style.display = 'none';
+  document.getElementById('result-card').style.display = 'none';
+  document.getElementById('steps-card').style.display = 'none';
+}
+
+function showErr(msg) {
+  clearOut();
+  document.getElementById('err-msg').textContent = msg;
+  document.getElementById('err-card').style.display = 'flex';
+}
+
+function modpow(base, exp, mod) {
+  if (mod === 1n) return 0n;
+  let r = 1n;
+  base = base % mod;
+  while (exp > 0n) {
+    if (exp % 2n === 1n) r = r * base % mod;
+    exp = exp / 2n;
+    base = base * base % mod;
+  }
+  return r;
+}
+
+function calculate() {
+  clearOut();
+  try {
+    const msgRaw = document.getElementById('inp-msg').value.trim();
+    const expRaw = document.getElementById('inp-exp').value.trim();
+    const nRaw   = document.getElementById('inp-n').value.trim();
+    if (!msgRaw || !expRaw || !nRaw) { showErr('Mohon lengkapi semua parameter.'); return; }
+
+    const expBI = BigInt(expRaw);
+    const nBI   = BigInt(nRaw);
+    if (nBI <= 1n) { showErr('Nilai modulus (n) harus > 1.'); return; }
+
+    if (mode === 'enc') {
+      const mBI = BigInt(msgRaw);
+      if (mBI >= nBI) { showErr('Syarat gagal: Pesan (m) harus lebih kecil dari modulus (n).'); return; }
+      const cBI = modpow(mBI, expBI, nBI);
+      document.getElementById('res-label').textContent = 'Ciphertext Output (c)';
+      document.getElementById('res-body').textContent = cBI.toString();
+      document.getElementById('result-card').style.display = 'block';
+      document.getElementById('steps-body').textContent =
+        'Formula  : c = m^e mod n\n' +
+        'm        = ' + mBI + '\n' +
+        'e        = ' + expBI + '\n' +
+        'n        = ' + nBI + '\n' +
+        '---------------------------------\n' +
+        'Hasil c  = ' + cBI;
+      document.getElementById('steps-card').style.display = 'block';
+
+    } else {
+      const blkSize = parseInt(document.getElementById('inp-block').value) || 0;
+      const digits  = msgRaw.replace(/\s+/g, '');
+      const blocks  = blkSize > 0 && digits.length > blkSize
+        ? Array.from({length: Math.ceil(digits.length / blkSize)}, (_, i) => digits.slice(i * blkSize, (i + 1) * blkSize))
+        : [digits];
+
+      const results = [];
+      let steps = 'Formula  : m = c^d mod n\nd        = ' + expBI + '\nn        = ' + nBI + '\n---------------------------------\n';
+
+      for (let i = 0; i < blocks.length; i++) {
+        const cBI = BigInt(blocks[i]);
+        if (cBI >= nBI) { showErr('Nilai blok ke-' + (i + 1) + ' (' + cBI + ') ≥ n. Sesuaikan parameter ukuran blok.'); return; }
+        const mBI = modpow(cBI, expBI, nBI);
+        results.push(mBI.toString());
+        steps += 'Blok ' + String(i + 1).padStart(2, ' ') + ' : c = ' + blocks[i] + '  →  m = ' + mBI + '\n';
+      }
+
+      document.getElementById('res-label').textContent = blocks.length > 1 ? 'Plaintext Output per Blok (m)' : 'Plaintext Output (m)';
+      document.getElementById('res-body').textContent = results.join('\n');
+      document.getElementById('result-card').style.display = 'block';
+      document.getElementById('steps-body').textContent = steps;
+      document.getElementById('steps-card').style.display = 'block';
+    }
+  } catch (e) {
+    showErr('Validasi input gagal: Pastikan semua input murni merupakan bilangan bulat. (' + e.message + ')');
+  }
+}
+
+function copyResult() {
+  const txt = document.getElementById('res-body').textContent;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:13px;height:13px;stroke-width:2"><path d="M20 6L9 17l-5-5"/></svg> Tersalin';
+    btn.style.color = "var(--success-text)";
+    setTimeout(() => {
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:13px;height:13px;stroke-width:2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Salin';
+      btn.style.color = "var(--text-main)";
+    }, 1500);
+  });
+}
+</script>
+</body>
+</html>

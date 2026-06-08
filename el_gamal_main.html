@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ElGamal Toolkit — Modern Dark</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  /* ── RESET & ROOT ─────────────────────────────────────────── */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    /* Modern Dark Theme Palette (Zinc/Slate base) */
+    --bg:        #09090b; /* Zinc 950 */
+    --panel:     #18181b; /* Zinc 900 */
+    --panel2:    #27272a; /* Zinc 800 */
+    --border:    #27272a; 
+    --border2:   #3f3f46; 
+    
+    --accent:    #38bdf8; /* Sky 400 */
+    --accent2:   #818cf8; /* Indigo 400 */
+    --accent-bg: rgba(56, 189, 248, 0.1);
+    
+    --green:     #34d399; /* Emerald 400 */
+    --red:       #f87171; /* Red 400 */
+    --yellow:    #fbbf24; /* Amber 400 */
+    --orange:    #fb923c; /* Orange 400 */
+    --purple:    #c084fc; /* Purple 400 */
+    
+    --text:      #f8fafc; /* Slate 50 */
+    --muted:     #94a3b8; /* Slate 400 */
+    --dim:       #71717a; /* Zinc 500 */
+    
+    --mono:      'JetBrains Mono', monospace;
+    --sans:      'Inter', sans-serif;
+    
+    --r-md:      10px;
+    --r-lg:      16px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding-bottom: 5rem;
+    line-height: 1.6;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(129, 140, 248, 0.1) 0%, transparent 50%),
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 30px 30px, 30px 30px;
+  }
+
+  /* ── HEADER ── */
+  .app-header {
+    padding: 3rem 1.5rem 2rem;
+    text-align: center;
+  }
+  .app-header h1 {
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #fff;
+    margin-bottom: 0.5rem;
+  }
+  .app-header h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .app-header p {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+  }
+
+  /* ── TABS (Pill Style) ── */
+  .tab-bar {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    max-width: 860px;
+    margin: 0 auto 2rem;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.75rem 1.25rem;
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    background: var(--panel2);
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+  .tab-pane { display: none; animation: fadeIn 0.4s ease; }
+  .tab-pane.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SECTION CARD ── */
+  .section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  
+  /* ── INFO BOX ── */
+  .info-box {
+    background: rgba(129, 140, 248, 0.08);
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 8px 8px 0;
+    padding: 1rem 1.25rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+  .info-box b { color: var(--text); font-weight: 600; }
+
+  /* ── INPUT GRID ── */
+  .input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .input-group label {
+    display: block;
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+  .input-group input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    outline: none;
+    transition: all 0.2s;
+  }
+  .input-group input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    border: none; border-radius: 8px; cursor: pointer;
+    font-family: var(--sans); font-size: 0.95rem; font-weight: 600;
+    padding: 0.75rem 1.5rem; transition: all 0.2s;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    box-shadow: 0 4px 10px rgba(56, 189, 248, 0.2);
+  }
+  .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* ── STEP BLOCK (JS INJECTED) ── */
+  .step-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+    animation: fadeIn 0.4s ease;
+  }
+  .step-header {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+  .step-num {
+    background: var(--panel2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    color: var(--accent);
+    font-family: var(--mono); font-size: 0.8rem; font-weight: 700;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-label {
+    font-family: var(--sans); font-size: 0.95rem; font-weight: 600;
+    color: var(--text);
+  }
+  .step-body {
+    padding: 1.25rem;
+    font-family: var(--mono); font-size: 0.85rem;
+    line-height: 1.8; color: var(--muted);
+    white-space: pre-wrap; word-break: break-word;
+  }
+
+  /* ── COLORS (JS INJECTED) ── */
+  .c-accent { color: var(--accent); font-weight: 600; }
+  .c-green  { color: var(--green); font-weight: 600; }
+  .c-red    { color: var(--red); font-weight: 600; }
+  .c-yellow { color: var(--yellow); font-weight: 600; }
+  .c-orange { color: var(--orange); font-weight: 600; }
+  .c-purple { color: var(--purple); font-weight: 600; }
+  .c-muted  { color: var(--dim); }
+  .bold     { font-weight: 700; }
+
+  /* ── RESULT BOX (JS INJECTED) ── */
+  .result-box {
+    border-radius: 12px; padding: 1.5rem;
+    font-family: var(--mono); margin-top: 1rem;
+  }
+  .result-box.success { background: rgba(52, 211, 153, 0.05); border: 1px solid rgba(52, 211, 153, 0.2); }
+  .result-box.fail    { background: rgba(248, 113, 113, 0.05); border: 1px solid rgba(248, 113, 113, 0.2); }
+  
+  .result-box h4 { font-family: var(--sans); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; color: var(--muted); }
+  .result-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-top: 1px dashed var(--border); }
+  .result-row:first-of-type { border-top: none; padding-top: 0; }
+  .result-row .rk { color: var(--muted); font-size: 0.85rem; }
+  .result-row .rv { color: var(--text); font-weight: 700; font-size: 1rem; }
+
+  /* ── ALPHA GRID (JS INJECTED) ── */
+  .alpha-wrap { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; margin-top: 1rem; }
+  .alpha-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.25rem;
+  }
+  .alpha-card.gen   { border-color: rgba(52, 211, 153, 0.4); box-shadow: 0 0 10px rgba(52, 211, 153, 0.05); }
+  .alpha-card.nogen { border-color: rgba(248, 113, 113, 0.2); }
+  
+  .alpha-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border); }
+  .alpha-val { font-family: var(--mono); font-size: 1.1rem; font-weight: 700; color: var(--text); }
+  .alpha-badge { font-family: var(--sans); font-size: 0.7rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 4px; letter-spacing: 0.5px; }
+  .alpha-badge.pass { background: rgba(52, 211, 153, 0.15); color: var(--green); }
+  .alpha-badge.fail { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+  
+  .test-line { font-family: var(--mono); font-size: 0.8rem; line-height: 1.9; color: var(--muted); }
+
+  /* ── GEN CHIPS (JS INJECTED) ── */
+  .chip-wrap { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+  .chip {
+    background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3);
+    border-radius: 6px; color: var(--green);
+    font-family: var(--mono); font-size: 0.85rem; font-weight: 600;
+    padding: 0.3rem 0.8rem;
+  }
+  .chip-first { background: var(--green); color: #000; font-weight: 700; }
+
+  /* ── SUMMARY FINAL (JS INJECTED) ── */
+  .summary {
+    background: linear-gradient(to right, var(--panel), var(--bg));
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem;
+  }
+  .summary h3 {
+    font-family: var(--sans); font-size: 1rem; font-weight: 600;
+    color: var(--text); margin-bottom: 1rem;
+  }
+
+  /* ── ERROR (JS INJECTED) ── */
+  .err {
+    background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3);
+    border-radius: 10px; color: var(--red);
+    font-family: var(--sans); font-size: 0.9rem; font-weight: 500;
+    padding: 1rem 1.25rem; margin-top: 1rem; display: flex; align-items: center; gap: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>ElGamal <span>Toolkit</span></h1>
+  <p>Alat Bantu Hitung Kriptografi Asimetrik & Pencari Generator Z*p</p>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('gen',this)">① Generator</button>
+  <button class="tab-btn" onclick="showTab('keygen',this)">② Kunci</button>
+  <button class="tab-btn" onclick="showTab('enc',this)">③ Enkripsi</button>
+  <button class="tab-btn" onclick="showTab('dec',this)">④ Dekripsi</button>
+</div>
+
+<div class="content">
+
+<div class="tab-pane active" id="tab-gen">
+  <div class="section top-accent">
+    <div class="info-box">
+      <b>Tujuan:</b> Mencari elemen α (generator / primitive root) dari Z*p.<br>
+      <b>Syarat:</b> α adalah generator jika α<sup>n/pᵢ</sup> mod p ≠ 1 untuk <b>semua</b> faktor prima pᵢ dari n = p−1.
+    </div>
+    <div class="input-grid">
+      <div class="input-group">
+        <label>Bilangan Prima p</label>
+        <input type="number" id="g_p" placeholder="cth: 3137" min="3"/>
+      </div>
+      <div class="input-group">
+        <label>Uji α mulai dari</label>
+        <input type="number" id="g_start" value="2" min="2"/>
+      </div>
+      <div class="input-group">
+        <label>Jumlah α diuji</label>
+        <input type="number" id="g_count" value="6" min="1" max="20"/>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="runGenerator()">Mulai Pencarian</button>
+  </div>
+  <div id="gen_out"></div>
+</div>
+
+<div class="tab-pane" id="tab-keygen">
+  <div class="section top-accent">
+    <div class="info-box">
+      <b>Tujuan:</b> Membangkitkan pasangan kunci publik dan kunci privat ElGamal.<br>
+      <b>Output:</b> Kunci publik (p, α, αᵃ mod p) dan kunci privat (a).
+    </div>
+    <div class="input-grid">
+      <div class="input-group">
+        <label>Bilangan Prima p</label>
+        <input type="number" id="k_p" placeholder="cth: 2357"/>
+      </div>
+      <div class="input-group">
+        <label>Generator α</label>
+        <input type="number" id="k_alpha" placeholder="cth: 2"/>
+      </div>
+      <div class="input-group">
+        <label>Kunci Privat a</label>
+        <input type="number" id="k_a" placeholder="cth: 1751"/>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="runKeygen()">Bangkitkan Kunci</button>
+  </div>
+  <div id="keygen_out"></div>
+</div>
+
+<div class="tab-pane" id="tab-enc">
+  <div class="section top-accent">
+    <div class="info-box">
+      <b>Tujuan:</b> Mengenkripsi pesan m menggunakan kunci publik milik A.<br>
+      <b>Rumus:</b> γ = αᵏ mod p &nbsp;|&nbsp; δ = m · (αᵃ)ᵏ mod p<br>
+      <b>Ciphertext:</b> c = (γ, δ)
+    </div>
+    <div class="input-grid">
+      <div class="input-group">
+        <label>Bilangan Prima p</label>
+        <input type="number" id="e_p" placeholder="cth: 2357"/>
+      </div>
+      <div class="input-group">
+        <label>Generator α</label>
+        <input type="number" id="e_alpha" placeholder="cth: 2"/>
+      </div>
+      <div class="input-group">
+        <label>Kunci Publik αᵃ</label>
+        <input type="number" id="e_alphaa" placeholder="cth: 1185"/>
+      </div>
+      <div class="input-group">
+        <label>Pesan m</label>
+        <input type="number" id="e_m" placeholder="cth: 2035"/>
+      </div>
+      <div class="input-group">
+        <label>Bilangan Acak k</label>
+        <input type="number" id="e_k" placeholder="cth: 1520"/>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="runEnkripsi()">Jalankan Enkripsi</button>
+  </div>
+  <div id="enc_out"></div>
+</div>
+
+<div class="tab-pane" id="tab-dec">
+  <div class="section top-accent">
+    <div class="info-box">
+      <b>Tujuan:</b> Memulihkan pesan m dari ciphertext (γ, δ) menggunakan kunci privat a.<br>
+      <b>Rumus:</b> Hitung γ<sup>p−1−a</sup> mod p = γ<sup>−a</sup>, lalu m = γ<sup>−a</sup> · δ mod p
+    </div>
+    <div class="input-grid">
+      <div class="input-group">
+        <label>Bilangan Prima p</label>
+        <input type="number" id="d_p" placeholder="cth: 2357"/>
+      </div>
+      <div class="input-group">
+        <label>Kunci Privat a</label>
+        <input type="number" id="d_a" placeholder="cth: 1751"/>
+      </div>
+      <div class="input-group">
+        <label>Ciphertext γ (gamma)</label>
+        <input type="number" id="d_gamma" placeholder="cth: 1430"/>
+      </div>
+      <div class="input-group">
+        <label>Ciphertext δ (delta)</label>
+        <input type="number" id="d_delta" placeholder="cth: 697"/>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="runDekripsi()">Jalankan Dekripsi</button>
+  </div>
+  <div id="dec_out"></div>
+</div>
+
+</div><script>
+/* ═══════════════════════════════════════════════════════════
+   UTILITIES (LOGIKA ASLI - TIDAK DIUBAH)
+═══════════════════════════════════════════════════════════ */
+function modPow(base,exp,mod){
+  let r=1n,b=BigInt(base)%BigInt(mod),e=BigInt(exp),m=BigInt(mod);
+  while(e>0n){if(e%2n===1n)r=r*b%m;e/=2n;b=b*b%m;}
+  return Number(r);
+}
+function isPrime(n){
+  if(n<2)return false;if(n===2)return true;if(n%2===0)return false;
+  for(let i=3;i*i<=n;i+=2)if(n%i===0)return false;
+  return true;
+}
+function primeFactors(n){
+  const s=new Set();let t=n;
+  for(let d=2;d*d<=t;d++){while(t%d===0){s.add(d);t=Math.floor(t/d);}}
+  if(t>1)s.add(t);return[...s].sort((a,b)=>a-b);
+}
+function factorizeFull(n){
+  const m={};let t=n;
+  for(let d=2;d*d<=t;d++){while(t%d===0){m[d]=(m[d]||0)+1;t=Math.floor(t/d);}}
+  if(t>1)m[t]=(m[t]||0)+1;return m;
+}
+function factorSteps(n){
+  const lines=[];let t=n;
+  for(let d=2;d*d<=t;d++){
+    while(t%d===0){lines.push(`${t} ÷ ${d} = ${Math.floor(t/d)}`);t=Math.floor(t/d);}
+  }
+  if(t>1)lines.push(`${t} adalah bilangan prima`);
+  return lines;
+}
+function factorStr(obj){
+  return Object.entries(obj).map(([b,e])=>e>1?`${b}<sup>${e}</sup>`:b).join(' × ');
+}
+function showTab(name,el){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  el.classList.add('active');
+}
+function stepBlock(num,label,body){
+  return`<div class="step-block">
+    <div class="step-header">
+      <div class="step-num">${num}</div>
+      <div class="step-label">${label}</div>
+    </div>
+    <div class="step-body">${body}</div>
+  </div>`;
+}
+function err(msg){return`<div class="err">⚠ ${msg}</div>`;}
+
+/* ═══════════════════════════════════════════════════════════
+   TAB 1 — GENERATOR
+═══════════════════════════════════════════════════════════ */
+function runGenerator(){
+  const p=parseInt(document.getElementById('g_p').value);
+  const start=parseInt(document.getElementById('g_start').value)||2;
+  const count=Math.min(parseInt(document.getElementById('g_count').value)||6,20);
+  const out=document.getElementById('gen_out');
+
+  if(!p||p<3){out.innerHTML=err('Masukkan bilangan prima p yang valid!');return;}
+  if(!isPrime(p)){out.innerHTML=err(`p = ${p} bukan bilangan prima! Gunakan bilangan prima seperti 2357, 3137, 3571, 19, 11, ...`);return;}
+
+  const n=p-1;
+  const full=factorizeFull(n);
+  const primes=primeFactors(n);
+  const steps=factorSteps(n);
+  const generators=[];
+  let html='';
+
+  /* Step 1 */
+  html+=stepBlock(1,'Hitung n = p − 1',
+    `n = p − 1\nn = ${p} − 1\nn = <span class="c-accent bold">${n}</span>`);
+
+  /* Step 2 */
+  html+=stepBlock(2,`Faktorisasi Prima n = ${n}`,
+    steps.join('\n')+
+    `\n\n<span class="c-yellow">Hasil:</span>  n = ${n} = ${factorStr(full)}`+
+    `\n<span class="c-yellow">Faktor prima (pᵢ):</span>  { ${primes.join(', ')} }`);
+
+  /* Step 3 */
+  const divLines=primes.map(pi=>`n / ${pi}  =  ${n} / ${pi}  =  <span class="c-orange bold">${n/pi}</span>`).join('\n');
+  html+=stepBlock(3,'Hitung n ÷ pᵢ  (eksponen untuk pengujian)',divLines);
+
+  /* Step 4 */
+  let cards='<div class="alpha-wrap">';
+  for(let a=start;a<start+count&&a<p;a++){
+    let isGen=true;
+    const rows=[];
+    for(const pi of primes){
+      const exp=n/pi;
+      const b=modPow(a,exp,p);
+      const ok=b!==1;
+      if(!ok&&isGen)isGen=false;
+      rows.push({pi,exp,b,ok});
+    }
+    if(isGen)generators.push(a);
+    let testHtml='<div class="test-line">';
+    let stopped=false;
+    for(const r of rows){
+      testHtml+=`Uji pᵢ=${r.pi}: ${a}<sup>${r.exp}</sup> mod ${p} = <span class="c-yellow">${r.b}</span>  `;
+      if(r.ok){testHtml+=`<span class="c-green">≠ 1 ✓ lolos</span>`;}
+      else{testHtml+=`<span class="c-red">= 1 ✗ GAGAL</span>`;stopped=true;}
+      testHtml+='<br>';
+      if(stopped)break;
+    }
+    if(stopped)testHtml+=`<span class="c-muted">⤷ hentikan, bukan generator</span>`;
+    testHtml+='</div>';
+    cards+=`<div class="alpha-card ${isGen?'gen':'nogen'}">
+      <div class="alpha-top">
+        <span class="alpha-val">α = ${a}</span>
+        <span class="alpha-badge ${isGen?'pass':'fail'}">${isGen?'✓ GENERATOR':'✗ BUKAN'}</span>
+      </div>${testHtml}</div>`;
+  }
+  cards+='</div>';
+  html+=stepBlock(4,`Uji Kandidat α = ${start} hingga ${start+count-1}`,cards);
+
+  /* Summary */
+  let sum='';
+  if(generators.length>0){
+    sum=`<div class="summary">
+      <h3>🎯 Generator yang ditemukan untuk p = ${p}</h3>
+      <div class="chip-wrap">
+        <span class="chip chip-first">α = ${generators[0]} ← terkecil</span>
+        ${generators.slice(1).map(g=>`<span class="chip">α = ${g}</span>`).join('')}
+      </div>
+      <p style="font-family:var(--mono);font-size:.85rem;color:var(--muted);margin-top:1rem">
+        Total ditemukan: <span class="c-green bold">${generators.length}</span> generator dalam rentang ini.
+      </p></div>`;
+  } else {
+    sum=`<div class="err">Tidak ada generator ditemukan pada rentang α = ${start} s.d. ${start+count-1}. Coba perbesar rentang.</div>`;
+  }
+  out.innerHTML=html+sum;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TAB 2 — KEY GENERATION
+═══════════════════════════════════════════════════════════ */
+function runKeygen(){
+  const p=parseInt(document.getElementById('k_p').value);
+  const alpha=parseInt(document.getElementById('k_alpha').value);
+  const a=parseInt(document.getElementById('k_a').value);
+  const out=document.getElementById('keygen_out');
+
+  if(!p||!alpha||!a){out.innerHTML=err('Lengkapi semua input!');return;}
+  if(!isPrime(p)){out.innerHTML=err(`p = ${p} bukan bilangan prima!`);return;}
+  if(a<1||a>p-2){out.innerHTML=err(`a harus berada di rentang 1 ≤ a ≤ ${p-2}`);return;}
+  if(alpha<2||alpha>=p){out.innerHTML=err(`α harus berada di rentang 2 ≤ α ≤ ${p-1}`);return;}
+
+  const alphaa=modPow(alpha,a,p);
+  let html='';
+
+  html+=stepBlock(1,'Identifikasi Parameter',
+    `p     = <span class="c-accent bold">${p}</span>   <span class="c-muted">(bilangan prima)</span>\nα     = <span class="c-accent bold">${alpha}</span>   <span class="c-muted">(generator dari Z*p)</span>\na     = <span class="c-red bold">${a}</span>   <span class="c-muted">(kunci PRIVAT — dirahasiakan!)</span>`);
+
+  html+=stepBlock(2,'Verifikasi Rentang a',
+    `Syarat: 1 ≤ a ≤ p − 2\n1 ≤ ${a} ≤ ${p} − 2 = ${p-2}\n<span class="c-green">✓ a = ${a} valid</span>`);
+
+  html+=stepBlock(3,'Hitung αᵃ mod p  (bagian kunci publik)',
+    `αᵃ mod p\n= ${alpha}<sup>${a}</sup> mod ${p}\n\n<span class="c-muted">Menggunakan fast exponentiation (square-and-multiply)...</span>\n\n= <span class="c-green bold">${alphaa}</span>`);
+
+  html+=stepBlock(4,'Susun Pasangan Kunci',
+    `<span class="c-yellow">Kunci Publik  (boleh diketahui siapa saja):</span>\n  ( p = ${p},  α = ${alpha},  αᵃ = ${alphaa} )\n\n<span class="c-red">Kunci Privat  (RAHASIA — jangan disebarkan!):</span>\n  ( a = ${a} )`);
+
+  html+=`<div class="summary">
+    <h3>📋 Hasil Pembangkitan Kunci</h3>
+    <div class="result-box success">
+      <div class="result-row"><span class="rk">Kunci Publik — p</span><span class="rv">${p}</span></div>
+      <div class="result-row"><span class="rk">Kunci Publik — α (generator)</span><span class="rv">${alpha}</span></div>
+      <div class="result-row"><span class="rk">Kunci Publik — αᵃ mod p</span><span class="rv">${alphaa}</span></div>
+      <div class="result-row"><span class="rk" style="color:var(--red)">Kunci Privat — a</span><span class="rv" style="color:var(--red)">${a}</span></div>
+    </div>
+  </div>`;
+
+  /* auto-fill tab enkripsi */
+  document.getElementById('e_p').value=p;
+  document.getElementById('e_alpha').value=alpha;
+  document.getElementById('e_alphaa').value=alphaa;
+  html+=`<p style="font-family:var(--mono);font-size:.8rem;color:var(--muted);margin-top:1rem">
+    ✔ Nilai p, α, αᵃ otomatis terisi di tab Enkripsi.</p>`;
+
+  out.innerHTML=html;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TAB 3 — ENKRIPSI
+═══════════════════════════════════════════════════════════ */
+function runEnkripsi(){
+  const p    =parseInt(document.getElementById('e_p').value);
+  const alpha=parseInt(document.getElementById('e_alpha').value);
+  const alphaa=parseInt(document.getElementById('e_alphaa').value);
+  const m    =parseInt(document.getElementById('e_m').value);
+  const k    =parseInt(document.getElementById('e_k').value);
+  const out  =document.getElementById('enc_out');
+
+  if(!p||!alpha||!alphaa||!m||!k){out.innerHTML=err('Lengkapi semua input!');return;}
+  if(!isPrime(p)){out.innerHTML=err(`p = ${p} bukan bilangan prima!`);return;}
+  if(m<0||m>p-1){out.innerHTML=err(`Pesan m harus berada di rentang 0 ≤ m ≤ ${p-1}`);return;}
+  if(k<1||k>p-2){out.innerHTML=err(`k harus berada di rentang 1 ≤ k ≤ ${p-2}`);return;}
+
+  const gamma =modPow(alpha,k,p);
+  const sess  =modPow(alphaa,k,p);
+  const delta =(m*sess)%p;
+  let html='';
+
+  html+=stepBlock(1,'Identifikasi Parameter',
+    `Kunci publik A  : (p = ${p},  α = ${alpha},  αᵃ = ${alphaa})\nPesan           : m = <span class="c-accent bold">${m}</span>\nBilangan acak   : k = <span class="c-purple bold">${k}</span>  <span class="c-muted">(harus berbeda tiap enkripsi!)</span>`);
+
+  html+=stepBlock(2,'Verifikasi Rentang m dan k',
+    `Syarat m: 0 ≤ m ≤ p−1  →  0 ≤ ${m} ≤ ${p-1}  <span class="c-green">✓</span>\nSyarat k: 1 ≤ k ≤ p−2  →  1 ≤ ${k} ≤ ${p-2}  <span class="c-green">✓</span>`);
+
+  html+=stepBlock(3,'Hitung γ = αᵏ mod p',
+    `γ = α<sup>k</sup> mod p\nγ = ${alpha}<sup>${k}</sup> mod ${p}\nγ = <span class="c-green bold">${gamma}</span>`);
+
+  html+=stepBlock(4,'Hitung Kunci Sesi = (αᵃ)ᵏ mod p',
+    `Kunci sesi = (αᵃ)<sup>k</sup> mod p\n           = ${alphaa}<sup>${k}</sup> mod ${p}\n           = <span class="c-yellow bold">${sess}</span>\n\n<span class="c-muted">(kunci sesi ini yang mengunci pesan m)</span>`);
+
+  html+=stepBlock(5,'Hitung δ = m · (αᵃ)ᵏ mod p',
+    `δ = m · kunci_sesi mod p\nδ = ${m} · ${sess} mod ${p}\nδ = ${m*sess} mod ${p}\nδ = <span class="c-green bold">${delta}</span>`);
+
+  html+=stepBlock(6,'Susun Ciphertext',
+    `Ciphertext c = (γ, δ)\nc = (<span class="c-green bold">${gamma}</span>, <span class="c-green bold">${delta}</span>)\n\n→ Kirimkan (${gamma}, ${delta}) kepada penerima A.`);
+
+  html+=`<div class="summary">
+    <h3>📤 Hasil Enkripsi</h3>
+    <div class="result-box success">
+      <div class="result-row"><span class="rk">γ (gamma) — komponen 1</span><span class="rv">${gamma}</span></div>
+      <div class="result-row"><span class="rk">δ (delta) — komponen 2</span><span class="rv">${delta}</span></div>
+      <div class="result-row"><span class="rk">Ciphertext c</span><span class="rv">(${gamma}, ${delta})</span></div>
+    </div>
+  </div>`;
+
+  /* auto-fill dekripsi */
+  document.getElementById('d_p').value=p;
+  document.getElementById('d_gamma').value=gamma;
+  document.getElementById('d_delta').value=delta;
+  html+=`<p style="font-family:var(--mono);font-size:.8rem;color:var(--muted);margin-top:.8rem">
+    ✔ Nilai p, γ, δ otomatis terisi di tab Dekripsi.</p>`;
+
+  out.innerHTML=html;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TAB 4 — DEKRIPSI
+═══════════════════════════════════════════════════════════ */
+function runDekripsi(){
+  const p    =parseInt(document.getElementById('d_p').value);
+  const a    =parseInt(document.getElementById('d_a').value);
+  const gamma=parseInt(document.getElementById('d_gamma').value);
+  const delta=parseInt(document.getElementById('d_delta').value);
+  const out  =document.getElementById('dec_out');
+
+  if(!p||!a||!gamma||!delta){out.innerHTML=err('Lengkapi semua input!');return;}
+  if(!isPrime(p)){out.innerHTML=err(`p = ${p} bukan bilangan prima!`);return;}
+
+  const exp_neg = p-1-a;           // p−1−a = eksponen untuk γ^{-a}
+  const gamma_nega = modPow(gamma,exp_neg,p);  // γ^{-a} mod p
+  const m = (gamma_nega * delta) % p;
+  let html='';
+
+  html+=stepBlock(1,'Identifikasi Parameter',
+    `p           = <span class="c-accent bold">${p}</span>\nKunci privat: a = <span class="c-red bold">${a}</span>\nCiphertext  : γ = <span class="c-purple bold">${gamma}</span>,  δ = <span class="c-purple bold">${delta}</span>`);
+
+  html+=stepBlock(2,'Hitung Eksponen untuk γ⁻ᵃ',
+    `Untuk mendapatkan γ<sup>−a</sup>, gunakan Fermat's Little Theorem:\n\nγ<sup>p−1</sup> ≡ 1 (mod p)  →  γ<sup>−a</sup> ≡ γ<sup>p−1−a</sup> (mod p)\n\nEksponen = p − 1 − a\n         = ${p} − 1 − ${a}\n         = <span class="c-yellow bold">${exp_neg}</span>`);
+
+  html+=stepBlock(3,'Hitung γ⁻ᵃ mod p  =  γᵖ⁻¹⁻ᵃ mod p',
+    `γ<sup>p−1−a</sup> mod p\n= ${gamma}<sup>${exp_neg}</sup> mod ${p}\n= <span class="c-green bold">${gamma_nega}</span>\n\n<span class="c-muted">(ini sama dengan γ<sup>−a</sup> = α<sup>−ak</sup>)</span>`);
+
+  html+=stepBlock(4,'Pulihkan Pesan m = γ⁻ᵃ · δ mod p',
+    `m = γ<sup>−a</sup> · δ mod p\nm = ${gamma_nega} · ${delta} mod ${p}\nm = ${gamma_nega*delta} mod ${p}\nm = <span class="c-green bold">${m}</span>`);
+
+  html+=stepBlock(5,'Verifikasi Matematis (Bukti Dekripsi)',
+    `γ<sup>−a</sup> · δ\n= α<sup>−ak</sup> · (m · α<sup>ak</sup>)   <span class="c-muted">← substitusi γ=αᵏ dan δ=m·αᵃᵏ</span>\n= m · α<sup>−ak</sup> · α<sup>ak</sup>\n= m · α<sup>0</sup>\n= m · 1\n= <span class="c-green bold">m ✓</span>`);
+
+  html+=`<div class="summary">
+    <h3>📥 Hasil Dekripsi</h3>
+    <div class="result-box success">
+      <div class="result-row"><span class="rk">γ (input)</span><span class="rv">${gamma}</span></div>
+      <div class="result-row"><span class="rk">δ (input)</span><span class="rv">${delta}</span></div>
+      <div class="result-row"><span class="rk">γ⁻ᵃ mod p</span><span class="rv">${gamma_nega}</span></div>
+      <div class="result-row"><span class="rk">Pesan m yang dipulihkan</span><span class="rv" style="font-size:1.1rem">${m}</span></div>
+    </div>
+  </div>`;
+
+  out.innerHTML=html;
+}
+</script>
+</body>
+</html>

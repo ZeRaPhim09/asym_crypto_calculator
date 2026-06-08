@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diffie-Hellman Calculator | Modern UI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    /* Color Palette matching the image */
+    --bg-main: #0b111a; 
+    --bg-card: #131b26; 
+    --bg-input: #1a2230; 
+    --bg-hover: #1f2937;
+    
+    --border: #2a3546;
+    --border-focus: #0098ff;
+    
+    --text-main: #e2e8f0; 
+    --text-muted: #64748b; 
+    --text-blue: #3b82f6;
+    
+    --accent-cyan: #00d4aa;
+    --accent-blue: #0098ff;
+    
+    --dita-color: #00d4aa; /* Changed to match image */
+    --ahan-color: #0098ff; /* Changed to match image */
+    
+    --success: #00d4aa;
+    --danger: #ff4d4d;
+    --warning: #f59e0b;
+
+    --font-sans: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid Background matching image */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 30px 30px;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+
+  /* HEADER */
+  header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  .logo-icon {
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px; height: 50px;
+    background: #00d4aa;
+    border-radius: 12px;
+    color: #fff;
+  }
+  h1 {
+    font-family: var(--font-sans);
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    vertical-align: middle;
+  }
+  h1 span:first-child { color: #fff; }
+  h1 span:last-child { color: var(--accent-cyan); }
+  
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 1rem;
+  }
+
+  /* TABS NAVIGATION */
+  .tabs {
+    display: flex;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 2rem;
+    overflow: hidden;
+  }
+  .tab {
+    flex: 1;
+    padding: 14px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .tab::before {
+    content: '⊚';
+    font-size: 0.9rem;
+  }
+  .tab:hover { background: rgba(255,255,255,0.02); color: var(--text-main); }
+  .tab.active {
+    background: transparent;
+    color: var(--accent-cyan);
+  }
+  .tab.active::before { color: var(--accent-cyan); }
+  .tab:not(:last-child) { border-right: 1px solid var(--border); }
+
+  /* PANELS */
+  .panel { display: none; animation: fadeIn 0.3s ease-in-out; }
+  .panel.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .card-title {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent-cyan);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: var(--accent-cyan);
+    border-radius: 2px;
+  }
+
+  /* FORM ELEMENTS */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  .field { display: flex; flex-direction: column; }
+  .field label {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+  }
+  .field input {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    color: var(--text-main);
+    transition: all 0.2s ease;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+  }
+  .field-note { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; min-height: 1rem;}
+
+  /* SECONDARY BUTTONS (Inside Cards) */
+  .btn-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 1.2rem; }
+  .btn-outline {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .btn-outline:hover {
+    background: rgba(255,255,255,0.03);
+    color: var(--text-main);
+    border-color: #4b5563;
+  }
+
+  /* ACTORS (ALICE & BOB) */
+  .actors-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  .actor-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+  }
+  .actor-title-dita { color: var(--dita-color) !important; }
+  .actor-title-dita::before { background: var(--dita-color); }
+  .actor-title-ahan { color: var(--ahan-color) !important; }
+  .actor-title-ahan::before { background: var(--ahan-color); }
+
+  /* USAGE INSTRUCTIONS */
+  .usage-instructions {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.8;
+    margin: 2rem 0 1.5rem 0;
+  }
+  .usage-instructions .blue-text {
+    color: var(--accent-blue);
+    font-weight: 600;
+  }
+  .usage-instructions span.icon { color: #facc15; margin-right: 5px;}
+
+  /* MAIN ACTION BUTTONS */
+  .btn-action-group {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 2rem;
+  }
+  .btn-calc {
+    background: var(--accent-blue);
+    color: #fff; /* White text for better contrast */
+    border: none;
+    padding: 12px 24px;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: filter 0.2s;
+  }
+  .btn-calc:hover { filter: brightness(1.1); }
+  
+  .btn-reset {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    padding: 12px 24px;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+  }
+  .btn-reset:hover { background: rgba(255, 77, 77, 0.1); }
+
+  /* RESULTS SECTION */
+  .result-wrapper {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    margin-top: 2rem;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+  .stat-box {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    text-align: center;
+  }
+  .stat-label { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;}
+  .stat-value { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 700; color: var(--text-main); }
+  
+  .key-banner {
+    background: rgba(0, 212, 170, 0.1);
+    border: 1px solid rgba(0, 212, 170, 0.3);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    text-align: center;
+    margin-top: 1.5rem;
+  }
+  .key-banner span { display: block; font-family: var(--font-mono); font-size: 0.8rem; color: var(--success); margin-bottom: 8px; text-transform: uppercase;}
+  .key-banner strong { font-family: var(--font-mono); font-size: 2.5rem; color: #fff; }
+
+  /* TABLES */
+  .table-container { overflow-x: auto; margin-top: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.85rem; }
+  th { background: var(--bg-input); color: var(--text-muted); padding: 12px 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase;}
+  td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-main); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ALERTS */
+  .alert { padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.9rem; margin-bottom: 1.5rem; display: none; align-items: center; gap: 10px; }
+  .alert.show { display: flex; }
+  .alert-error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; }
+
+  /* LOGS */
+  .log-container { display: flex; flex-direction: column; gap: 8px; }
+  .log-item {
+    padding: 10px 14px;
+    background: var(--bg-input);
+    border-left: 3px solid var(--accent-blue);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .log-item b { color: var(--text-main); }
+  .log-item .ok { color: var(--success); }
+
+  /* GUIDE STYLES */
+  .guide-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .guide-desc { font-size: 0.9rem; color: var(--text-main); margin-bottom: 1.5rem; line-height: 1.6; }
+  .guide-step {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .guide-step-num { color: var(--accent-cyan); font-weight: 700; min-width: 20px; }
+  .guide-step b { color: #fff; }
+  .guide-step .ok { color: var(--accent-cyan); }
+  
+  .guide-tips { display: flex; flex-direction: column; gap: 12px; }
+  .guide-tip { display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+  .guide-tip::before { content: '◆'; color: var(--text-blue); font-size: 0.7rem; margin-top: 3px; }
+  .guide-tip b { color: var(--accent-cyan); }
+  .guide-note { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); margin-top: 1.25rem; line-height: 1.6; }
+
+  .hidden { display: none !important; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 768px) {
+    .form-grid, .actors-grid { grid-template-columns: 1fr; }
+    .btn-action-group { flex-direction: column; }
+    .btn-action-group button { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>
+      <div class="logo-icon">🔐</div>
+      <span>Diffie-</span><span>Hellman</span>
+    </h1>
+    <p class="subtitle">Kriptografi Kunci Publik · Kalkulator Interaktif</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('dh')">Protokol DH</button>
+    <button class="tab" onclick="switchTab('pr')">Akar Primitif</button>
+    <button class="tab" onclick="switchTab('guide')">Panduan</button>
+  </div>
+
+  <div id="tab-dh" class="panel active">
+    
+    <div class="card">
+      <div class="card-title">PARAMETER PUBLIK</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>p (bilangan prima)</label>
+          <input type="number" id="dh-p" placeholder="cth: 563">
+          <div class="field-note" id="p-note"></div>
+        </div>
+        <div class="field">
+          <label>g (akar primitif mod p)</label>
+          <input type="number" id="dh-g" placeholder="cth: 559">
+          <div class="field-note" id="g-note"></div>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn-outline" onclick="autoFillG()">🎲 Auto-pilih g terbesar ke-2</button>
+        <button class="btn-outline" onclick="randomPrime()">🎯 Prima acak</button>
+      </div>
+    </div>
+
+    <div class="actors-grid">
+      <div class="actor-card">
+        <div class="card-title actor-title-dita">PIHAK A (DITA / ALICE)</div>
+        <div class="field">
+          <label>x (kunci privat Dita)</label>
+          <input type="number" id="dh-x" placeholder="cth: 70">
+        </div>
+        <div class="field" style="margin-top: 1.2rem;">
+          <label>C = gˣ mod p (dikirim ke Ahan)</label>
+          <input type="number" id="dh-C" placeholder="atau isi C yang diterima">
+        </div>
+        <div class="btn-group">
+           <button class="btn-outline" onclick="randomPrivate('x')">🎲 Acak x</button>
+        </div>
+      </div>
+
+      <div class="actor-card">
+        <div class="card-title actor-title-ahan">PIHAK B (AHAN / BOB)</div>
+        <div class="field">
+          <label>y (kunci privat Ahan)</label>
+          <input type="number" id="dh-y" placeholder="cth: 81">
+        </div>
+        <div class="field" style="margin-top: 1.2rem;">
+          <label>D = gʸ mod p (dikirim ke Dita)</label>
+          <input type="number" id="dh-D" placeholder="atau isi D yang diterima">
+        </div>
+         <div class="btn-group">
+           <button class="btn-outline" onclick="randomPrivate('y')">🎲 Acak y</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="dh-alert" class="alert alert-error"></div>
+
+    <div class="usage-instructions">
+      <div><span class="icon">💡</span> <span class="blue-text">Cara pakai:</span> Isi p dan g, lalu ada 2 mode:</div>
+      <div><span class="blue-text">Mode 1 (hitung C dan D):</span> isi x dan y &rarr; klik Hitung.</div>
+      <div><span class="blue-text">Mode 2 (cari x/y dari C atau D):</span> isi nilai C dan/atau D yang sudah diketahui &rarr; klik Hitung.</div>
+    </div>
+
+    <div class="btn-action-group">
+      <button class="btn-calc" onclick="calculateDH()">▶ Hitung Kunci Bersama</button>
+      <button class="btn-reset" onclick="resetDH()">✕ Reset</button>
+    </div>
+
+    <div id="dh-result" class="result-wrapper hidden">
+      <div class="stat-grid" id="dh-stats"></div>
+      <div class="log-container" id="dh-steps"></div>
+      <div id="dh-keybanner"></div>
+    </div>
+
+  </div>
+
+  <div id="tab-pr" class="panel">
+    <div class="card">
+      <div class="card-title">TEMUKAN SEMUA AKAR PRIMITIF</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>p (bilangan prima)</label>
+          <input type="number" id="pr-p" placeholder="cth: 563" min="3">
+          <div class="field-note" id="pr-p-note"></div>
+        </div>
+        <div class="field">
+          <label>Tampilkan g kandidat (uji dari)</label>
+          <input type="number" id="pr-test" placeholder="cth: 629 (p-2 otomatis)">
+        </div>
+      </div>
+      
+      <div id="pr-alert" class="alert alert-error" style="margin-top: 1rem;"></div>
+      
+      <div class="btn-group" style="margin-top: 1.5rem;">
+        <button class="btn-outline" onclick="findPR()" style="background:var(--accent-blue); color:#fff; border:none;">🔍 Cari Akar Primitif</button>
+        <button class="btn-outline" onclick="testSingleG()">🧪 Uji Satu Nilai g</button>
+        <button class="btn-outline" onclick="resetPR()" style="color:var(--danger); border-color:var(--danger);">✕ Reset</button>
+      </div>
+    </div>
+
+    <div id="pr-result" class="result-wrapper hidden">
+      <div class="stat-grid" id="pr-stats"></div>
+      
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>g</th>
+              <th>q=f₁: g^(φ/q) mod p</th>
+              <th>q=f₂: g^(φ/q) mod p</th>
+              <th id="pr-th3" class="hidden">q=f₃: g^(φ/q) mod p</th>
+              <th id="pr-th4" class="hidden">q=f₄: g^(φ/q) mod p</th>
+              <th>Status</th>
+              <th>Urutan</th>
+            </tr>
+          </thead>
+          <tbody id="pr-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-guide" class="panel">
+    
+    <div class="guide-card">
+      <div class="card-title">CARA KERJA DIFFIE-HELLMAN</div>
+      <div class="guide-desc">Protokol DH memungkinkan dua pihak menyepakati kunci rahasia bersama melalui saluran tidak aman, tanpa pernah mengirim kunci itu secara langsung.</div>
+      
+      <div class="guide-step">
+        <div class="guide-step-num">1</div>
+        <div>Sepakati <b>p</b> (prima besar) dan <b>g</b> (akar primitif mod p) secara publik.</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">2</div>
+        <div>Dita pilih kunci privat <b>x</b> (rahasia), kirim <b>C = gˣ mod p</b> ke Ahan.</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">3</div>
+        <div>Ahan pilih kunci privat <b>y</b> (rahasia), kirim <b>D = gʸ mod p</b> ke Dita.</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">4</div>
+        <div>Dita hitung: <b class="ok">k = Dˣ mod p</b></div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">5</div>
+        <div>Ahan hitung: <b class="ok">k' = Cʸ mod p</b></div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">✓</div>
+        <div>Karena <b>k = k' = gˣʸ mod p</b>, keduanya mendapat kunci yang sama!</div>
+      </div>
+    </div>
+
+    <div class="guide-card">
+      <div class="card-title">CARA MENCARI AKAR PRIMITIF</div>
+      <div class="guide-desc">g adalah akar primitif mod p jika orde g = φ(p) = p−1.</div>
+      
+      <div class="guide-step">
+        <div class="guide-step-num">1</div>
+        <div>Hitung <b>φ(p) = p - 1</b></div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">2</div>
+        <div>Faktorkan φ(p), ambil faktor prima uniknya: <b>q₁, q₂, ...</b></div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">3</div>
+        <div>Untuk setiap faktor prima q, uji: <b>g^(φ(p)/q) mod p ≠ 1</b></div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">4</div>
+        <div>Jika <b class="ok">semua uji ≠ 1</b> → g adalah akar primitif ✓</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-num">5</div>
+        <div>Ulangi dari g = p-2 turun ke bawah untuk menemukan urutan terbesar.</div>
+      </div>
+      
+      <div class="guide-note">
+        Contoh p=563: φ(563)=562=2×281 → hanya 2 pengujian per kandidat g.<br>
+        Contoh p=631: φ(631)=630=2×3×5×7 → 4 pengujian per kandidat g.
+      </div>
+    </div>
+
+    <div class="guide-card">
+      <div class="card-title">TIPS PENGGUNAAN PROGRAM</div>
+      <div class="guide-tips">
+        <div class="guide-tip">Klik <b>Auto-pilih g</b> untuk otomatis mencari akar primitif terbesar ke-2.</div>
+        <div class="guide-tip">Klik <b>Prima acak</b> untuk generate bilangan prima secara random.</div>
+        <div class="guide-tip">Tab <b>Akar Primitif</b> menampilkan tabel lengkap proses pengujian tiap kandidat g.</div>
+        <div class="guide-tip">Untuk p besar (>5000), pencarian akar primitif bisa memakan waktu beberapa detik.</div>
+        <div class="guide-tip">File ini bekerja <b>100% offline</b> — tidak butuh koneksi internet.</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// ===================== LOGIKA MATEMATIKA =====================
+
+function isPrime(n) {
+  if (n < 2) return false;
+  if (n === 2) return true;
+  if (n % 2 === 0) return false;
+  for (let i = 3; i <= Math.sqrt(n); i += 2)
+    if (n % i === 0) return false;
+  return true;
+}
+
+function primeFactors(n) {
+  const factors = new Set();
+  let d = 2;
+  while (d * d <= n) {
+    while (n % d === 0) { factors.add(d); n = Math.floor(n / d); }
+    d++;
+  }
+  if (n > 1) factors.add(n);
+  return [...factors];
+}
+
+function modpow(base, exp, mod) {
+  base = BigInt(base); exp = BigInt(exp); mod = BigInt(mod);
+  let result = 1n;
+  base = base % mod;
+  while (exp > 0n) {
+    if (exp % 2n === 1n) result = result * base % mod;
+    exp = exp / 2n;
+    base = base * base % mod;
+  }
+  return Number(result);
+}
+
+function isPrimitiveRoot(g, p) {
+  const phi = p - 1;
+  const factors = primeFactors(phi);
+  for (const q of factors) {
+    if (modpow(g, phi / q, p) === 1) return false;
+  }
+  return true;
+}
+
+function discreteLog(g, target, p) {
+  const m = Math.ceil(Math.sqrt(p));
+  const table = new Map();
+  let val = 1;
+  for (let j = 0; j < m; j++) {
+    table.set(val, j);
+    val = modpow(val * g % p, 1, p);
+  }
+  const table2 = new Map();
+  let cur = 1n;
+  const bg = BigInt(g), bp = BigInt(p);
+  for (let j = 0; j < m; j++) {
+    table2.set(Number(cur), j);
+    cur = cur * bg % bp;
+  }
+  const inv = modpow(g, p - 1 - m, p);
+  let gamma = target;
+  for (let i = 0; i < m; i++) {
+    if (table2.has(gamma)) {
+      const ans = i * m + table2.get(gamma);
+      if (ans > 0) return ans;
+    }
+    gamma = Number(BigInt(gamma) * BigInt(inv) % bp);
+  }
+  return null;
+}
+
+function randomPrimeBetween(lo, hi) {
+  for (let attempt = 0; attempt < 10000; attempt++) {
+    const n = lo + Math.floor(Math.random() * (hi - lo + 1));
+    if (isPrime(n)) return n;
+  }
+  return null;
+}
+
+// ===================== UI HELPERS =====================
+
+function switchTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function showAlert(id, msg) {
+  const el = document.getElementById(id);
+  el.innerHTML = `⚠️ ${msg}`;
+  el.classList.add('show');
+}
+
+function hideAlert(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+function showSteps(steps) {
+  const container = document.getElementById('dh-steps');
+  container.innerHTML = '';
+  steps.forEach((s) => {
+    const div = document.createElement('div');
+    div.className = 'log-item';
+    div.innerHTML = s;
+    container.appendChild(div);
+  });
+}
+
+// ===================== DH CALCULATOR =====================
+
+function validateDHInputs() {
+  const p = parseInt(document.getElementById('dh-p').value);
+  const g = parseInt(document.getElementById('dh-g').value);
+  if (!p || p < 3) return { error: 'p harus bilangan prima ≥ 3' };
+  if (!isPrime(p)) return { error: `p = ${p} bukan bilangan prima!` };
+  if (!g || g < 2) return { error: 'g harus ≥ 2' };
+  if (g >= p) return { error: 'g harus < p' };
+  if (!isPrimitiveRoot(g, p)) return { error: `g = ${g} bukan akar primitif mod ${p}!` };
+  return { p, g };
+}
+
+function calculateDH() {
+  hideAlert('dh-alert');
+  const v = validateDHInputs();
+  if (v.error) { showAlert('dh-alert', v.error); return; }
+  const { p, g } = v;
+  const phi = p - 1;
+
+  let x = parseInt(document.getElementById('dh-x').value);
+  let y = parseInt(document.getElementById('dh-y').value);
+  let C = parseInt(document.getElementById('dh-C').value);
+  let D = parseInt(document.getElementById('dh-D').value);
+
+  const steps = [];
+  steps.push(`[System] Inisialisasi: p = <b>${p}</b>, g = <b>${g}</b>, φ(p) = <b>${phi}</b>`);
+
+  if (x && !isNaN(x)) {
+    const calcC = modpow(g, x, p);
+    document.getElementById('dh-C').value = calcC;
+    C = calcC;
+    steps.push(`[Dita] C = gˣ mod p = ${g}^${x} mod ${p} = <b class="ok">${C}</b> (Dikirim)`);
+  } else if (C && !isNaN(C)) {
+    x = discreteLog(g, C, p);
+    if (x) {
+      document.getElementById('dh-x').value = x;
+      steps.push(`[Attack] Logaritma Diskrit: x ditemukan = <b>${x}</b>`);
+    } else {
+      showAlert('dh-alert', 'Gagal menemukan x dari nilai C.'); return;
+    }
+  } else {
+    showAlert('dh-alert', 'Isi minimal x atau C untuk Dita.'); return;
+  }
+
+  if (y && !isNaN(y)) {
+    const calcD = modpow(g, y, p);
+    document.getElementById('dh-D').value = calcD;
+    D = calcD;
+    steps.push(`[Ahan] D = gʸ mod p = ${g}^${y} mod ${p} = <b class="ok">${D}</b> (Dikirim)`);
+  } else if (D && !isNaN(D)) {
+    y = discreteLog(g, D, p);
+    if (y) {
+      document.getElementById('dh-y').value = y;
+      steps.push(`[Attack] Logaritma Diskrit: y ditemukan = <b>${y}</b>`);
+    } else {
+      showAlert('dh-alert', 'Gagal menemukan y dari nilai D.'); return;
+    }
+  } else {
+    showAlert('dh-alert', 'Isi minimal y atau D untuk Ahan.'); return;
+  }
+
+  const k1 = modpow(D, x, p);
+  const k2 = modpow(C, y, p);
+  steps.push(`[Dita] Hitung Kunci: k = Dˣ mod p = ${D}^${x} mod ${p} = <b class="ok">${k1}</b>`);
+  steps.push(`[Ahan] Hitung Kunci: k' = Cʸ mod p = ${C}^${y} mod ${p} = <b class="ok">${k2}</b>`);
+
+  document.getElementById('dh-stats').innerHTML = `
+    <div class="stat-box"><div class="stat-label">Prima (p)</div><div class="stat-value">${p}</div></div>
+    <div class="stat-box"><div class="stat-label">Generator (g)</div><div class="stat-value">${g}</div></div>
+    <div class="stat-box"><div class="stat-label">Privat Dita (x)</div><div class="stat-value" style="color:var(--dita-color)">${x}</div></div>
+    <div class="stat-box"><div class="stat-label">Privat Ahan (y)</div><div class="stat-value" style="color:var(--ahan-color)">${y}</div></div>
+    <div class="stat-box"><div class="stat-label">Publik Dita (C)</div><div class="stat-value">${C}</div></div>
+    <div class="stat-box"><div class="stat-label">Publik Ahan (D)</div><div class="stat-value">${D}</div></div>
+  `;
+
+  document.getElementById('dh-keybanner').innerHTML = `
+    <div class="key-banner">
+      <span>Kunci Bersama Rahasia (Shared Secret Key)</span>
+      <strong>${k1}</strong>
+    </div>
+  `;
+
+  document.getElementById('dh-result').classList.remove('hidden');
+  showSteps(steps);
+}
+
+function resetDH() {
+  ['dh-p','dh-g','dh-x','dh-y','dh-C','dh-D'].forEach(id => {
+    document.getElementById(id).value = '';
+    document.getElementById(id).className = '';
+  });
+  document.getElementById('dh-result').classList.add('hidden');
+  hideAlert('dh-alert');
+  document.getElementById('p-note').textContent = '';
+  document.getElementById('g-note').textContent = '';
+}
+
+function autoFillG() {
+  const p = parseInt(document.getElementById('dh-p').value);
+  if (!p || !isPrime(p)) { showAlert('dh-alert', 'Isi p dengan bilangan prima yang valid dulu!'); return; }
+  hideAlert('dh-alert');
+  document.getElementById('g-note').textContent = 'Mencari...';
+  setTimeout(() => {
+    let count = 0;
+    for (let g = p - 2; g >= 2; g--) {
+      if (isPrimitiveRoot(g, p)) {
+        count++;
+        if (count === 2) {
+          document.getElementById('dh-g').value = g;
+          document.getElementById('g-note').textContent = `✓ Akar primitif terbesar ke-2`;
+          document.getElementById('dh-g').className = 'ok';
+          return;
+        }
+      }
+    }
+    document.getElementById('g-note').textContent = 'Tidak ditemukan';
+  }, 10);
+}
+
+function randomPrime() {
+  const p = randomPrimeBetween(100, 1000);
+  if (p) {
+    document.getElementById('dh-p').value = p;
+    document.getElementById('p-note').textContent = `✓ ${p} adalah bilangan prima`;
+    document.getElementById('dh-p').className = 'ok';
+    document.getElementById('dh-g').value = '';
+    document.getElementById('g-note').textContent = '';
+  }
+}
+
+function randomPrivate(who) {
+  const p = parseInt(document.getElementById('dh-p').value);
+  if (!p) { showAlert('dh-alert', 'Isi p dulu!'); return; }
+  const val = 2 + Math.floor(Math.random() * (p - 3));
+  document.getElementById('dh-' + who).value = val;
+}
+
+// ===================== PRIMITIVE ROOT FINDER =====================
+
+function findPR() {
+  hideAlert('pr-alert');
+  const p = parseInt(document.getElementById('pr-p').value);
+  if (!p || p < 3) { showAlert('pr-alert', 'Masukkan bilangan prima p ≥ 3'); return; }
+  if (!isPrime(p)) { showAlert('pr-alert', `${p} bukan bilangan prima!`); return; }
+
+  const testFrom = parseInt(document.getElementById('pr-test').value) || p - 2;
+  const phi = p - 1;
+  const factors = primeFactors(phi);
+  
+  document.getElementById('pr-result').classList.remove('hidden');
+
+  document.getElementById('pr-stats').innerHTML = `
+    <div class="stat-box"><div class="stat-label">Prima (p)</div><div class="stat-value">${p}</div></div>
+    <div class="stat-box"><div class="stat-label">φ(p)</div><div class="stat-value">${phi}</div></div>
+    <div class="stat-box"><div class="stat-label">Faktor Prima</div><div class="stat-value" style="font-size:1rem; padding-top:5px;">${factors.join(' × ')}</div></div>
+    <div class="stat-box"><div class="stat-label">Eksponen Uji</div><div class="stat-value" style="font-size:1rem; padding-top:5px;">${factors.map(f => `${phi/f}`).join(', ')}</div></div>
+  `;
+
+  const th3 = document.getElementById('pr-th3');
+  const th4 = document.getElementById('pr-th4');
+  th3.className = factors.length >= 3 ? '' : 'hidden';
+  th4.className = factors.length >= 4 ? '' : 'hidden';
+  if (factors[0]) th3.textContent = `q=${factors[2]}: g^(φ/${factors[2]}) mod p`;
+  if (factors[1]) th4.textContent = `q=${factors[3]}: g^(φ/${factors[3]}) mod p`;
+
+  const tbody = document.getElementById('pr-tbody');
+  tbody.innerHTML = '';
+
+  let prCount = 0;
+  for (let g = testFrom; g >= 2 && (testFrom - g) < 30; g--) {
+    const tests = factors.map(q => ({ q, val: modpow(g, phi / q, p) }));
+    const isRoot = tests.every(t => t.val !== 1);
+    if (isRoot) prCount++;
+
+    const testCells = factors.map((q, i) => {
+      const val = tests[i].val;
+      const pass = val !== 1;
+      return `<td style="color:${pass ? 'var(--success)' : 'var(--danger)'}">${val} ${pass ? '✓' : '✗'}</td>`;
+    });
+    while (testCells.length < 4) testCells.push('<td style="color:var(--text-muted)">—</td>');
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><b>${g}</b></td>
+      ${testCells.slice(0,4).join('')}
+      <td style="color:${isRoot ? 'var(--success)' : 'var(--danger)'}">${isRoot ? 'Akar Sah ✓' : 'Bukan ✗'}</td>
+      <td>${isRoot && prCount <= 3 ? `<span style="color:var(--warning)">Top ${prCount}</span>` : ''}</td>
+    `;
+    tbody.appendChild(row);
+  }
+}
+
+function testSingleG() {
+  const p = parseInt(document.getElementById('pr-p').value);
+  const gVal = prompt('Masukkan nilai g yang ingin diuji:');
+  if (!gVal) return;
+  const g = parseInt(gVal);
+
+  if (!p || !isPrime(p)) { showAlert('pr-alert', 'Isi p dengan bilangan prima yang valid dulu!'); return; }
+  if (isNaN(g) || g < 2 || g >= p) { showAlert('pr-alert', `g harus antara 2 dan ${p-1}`); return; }
+
+  const phi = p - 1;
+  const factors = primeFactors(phi);
+  const tests = factors.map(q => ({ q, val: modpow(g, phi / q, p), pass: modpow(g, phi / q, p) !== 1 }));
+  const isRoot = tests.every(t => t.pass);
+
+  const detail = tests.map(t =>
+    `q=${t.q}: ${g}^(${phi}/${t.q}) mod ${p} = ${t.val} ${t.pass ? '≠ 1 ✓' : '= 1 ✗'}`
+  ).join('\n');
+
+  alert(`Uji g = ${g} mod p = ${p}\nφ(p) = ${phi} = ${factors.join(' × ')}\n\n${detail}\n\nKesimpulan: g = ${g} ${isRoot ? 'ADALAH' : 'BUKAN'} akar primitif mod ${p}`);
+}
+
+function resetPR() {
+  document.getElementById('pr-p').value = '';
+  document.getElementById('pr-test').value = '';
+  document.getElementById('pr-result').classList.add('hidden');
+  hideAlert('pr-alert');
+}
+
+// ===================== LIVE VALIDATION =====================
+document.getElementById('dh-p').addEventListener('input', function() {
+  const n = parseInt(this.value);
+  const note = document.getElementById('p-note');
+  if (!n) { note.textContent = ''; return; }
+  if (isPrime(n)) { note.textContent = `✓ ${n} adalah bilangan prima`; note.style.color = "var(--success)"; } 
+  else { note.textContent = `✗ ${n} bukan bilangan prima`; note.style.color = "var(--danger)"; }
+});
+
+document.getElementById('dh-g').addEventListener('input', function() {
+  const g = parseInt(this.value);
+  const p = parseInt(document.getElementById('dh-p').value);
+  const note = document.getElementById('g-note');
+  if (!g || !p || !isPrime(p)) { note.textContent = ''; return; }
+  if (isPrimitiveRoot(g, p)) { note.textContent = `✓ ${g} adalah akar primitif mod ${p}`; note.style.color = "var(--success)"; } 
+  else { note.textContent = `✗ ${g} bukan akar primitif mod ${p}`; note.style.color = "var(--danger)"; }
+});
+</script>
+</body>
+</html>

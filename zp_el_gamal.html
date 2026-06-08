@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pencari Generator Z*p — ElGamal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root {
+    /* Modern Slate/Zinc Dark Mode */
+    --bg:         #09090b; /* Zinc 950 */
+    --panel:      #18181b; /* Zinc 900 */
+    --border:     #27272a; /* Zinc 800 */
+    --border-h:   #3f3f46; /* Zinc 700 */
+    
+    /* Sleek Accents */
+    --accent:     #8b5cf6; /* Violet 500 */
+    --accent-h:   #a78bfa; /* Violet 400 */
+    --accent-bg:  rgba(139, 92, 246, 0.1);
+    
+    --green:      #10b981; /* Emerald 500 */
+    --green-bg:   rgba(16, 185, 129, 0.1);
+    
+    --red:        #f43f5e; /* Rose 500 */
+    --red-bg:     rgba(244, 63, 94, 0.1);
+    
+    --yellow:     #eab308; /* Amber 500 */
+    
+    --text:       #f4f4f5; /* Zinc 50 */
+    --muted:      #a1a1aa; /* Zinc 400 */
+    --dim:        #71717a; /* Zinc 500 */
+    
+    --mono:       'JetBrains Mono', monospace;
+    --sans:       'Inter', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 3rem 1.5rem;
+    line-height: 1.6;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Ambient Glow Background */
+  body::before {
+    content: '';
+    position: absolute;
+    top: -150px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 400px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--accent-bg);
+    color: var(--accent-h);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    letter-spacing: 0.5px;
+  }
+  header h1 {
+    font-size: clamp(2rem, 5vw, 2.5rem);
+    font-weight: 700;
+    letter-spacing: -1px;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+  }
+  header p {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  /* ── CONTAINER ── */
+  .container { max-width: 800px; margin: 0 auto; }
+
+  /* ── INPUT CARD ── */
+  .input-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 2.5rem;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+  .input-card .field {
+    flex: 1;
+    min-width: 150px;
+  }
+  .input-card label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .input-card input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    outline: none;
+    transition: all 0.2s;
+  }
+  .input-card input:focus { 
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+  .input-card button {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s;
+    height: 44px; /* Align with inputs */
+  }
+  .input-card button:hover { 
+    background: var(--muted); 
+    transform: translateY(-1px); 
+  }
+
+  /* ── STEP CARD ── */
+  .step-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.4s ease-out both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .step-title::before {
+    content: '';
+    display: block;
+    width: 4px;
+    height: 16px;
+    background: var(--accent);
+    border-radius: 4px;
+  }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: #000000;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .code-block strong { color: var(--accent-h); font-weight: 600; }
+
+  /* ── ALPHA GRID ── */
+  .alpha-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1rem;
+  }
+  .alpha-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    transition: border-color 0.2s;
+  }
+  .alpha-card.is-gen  { border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.05); }
+  .alpha-card.not-gen { border-color: rgba(244, 63, 94, 0.2); }
+
+  .alpha-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px dashed var(--border);
+  }
+  .alpha-num {
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .alpha-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+  }
+  .alpha-status.pass { background: var(--green-bg); color: var(--green); }
+  .alpha-status.fail { background: var(--red-bg); color: var(--red); }
+
+  .test-row {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    line-height: 1.8;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+  }
+  .test-row span.val { color: var(--text); font-weight: 500; }
+  .test-row span.ok  { color: var(--green); }
+  .test-row span.no  { color: var(--red); }
+
+  /* ── SUMMARY CARD ── */
+  .summary-card {
+    background: linear-gradient(145deg, #18181b, #1e1b4b);
+    border: 1px solid var(--border-h);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-top: 2rem;
+    animation: fadeUp 0.4s 0.2s ease both;
+  }
+  .summary-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .gen-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  .gen-chip {
+    background: var(--green-bg);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: var(--green);
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 8px;
+  }
+
+  .error-msg {
+    background: var(--red-bg);
+    border: 1px solid rgba(244, 63, 94, 0.3);
+    border-radius: 12px;
+    color: var(--red);
+    font-size: 0.9rem;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  @media (max-width: 600px) {
+    .input-card { flex-direction: column; align-items: stretch; padding: 1.5rem; }
+    .input-card button { margin-top: 0.5rem; }
+    .alpha-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="badge">ElGamal Cryptography</div>
+    <h1>Generator Z*p Finder</h1>
+    <p>Algoritma 7.3 — Modul Rekayasa Kriptografi</p>
+  </header>
+
+  <div class="input-card">
+    <div class="field">
+      <label>Bilangan Prima (p)</label>
+      <input type="number" id="inputP" placeholder="cth: 3137" min="3" />
+    </div>
+    <div class="field">
+      <label>Mulai Uji (α)</label>
+      <input type="number" id="inputStart" placeholder="cth: 2" min="2" value="2"/>
+    </div>
+    <div class="field">
+      <label>Jumlah Uji</label>
+      <input type="number" id="inputCount" placeholder="cth: 6" min="1" max="30" value="6"/>
+    </div>
+    <button onclick="cariGenerator()">Kalkulasi</button>
+  </div>
+
+  <div id="output"></div>
+</div>
+
+<script>
+// ── Helpers ──────────────────────────────────────────────────
+function isPrime(n) {
+  if (n < 2) return false;
+  if (n === 2) return true;
+  if (n % 2 === 0) return false;
+  for (let i = 3; i * i <= n; i += 2) if (n % i === 0) return false;
+  return true;
+}
+
+function primeFactors(n) {
+  const factors = new Set();
+  let temp = n;
+  for (let d = 2; d * d <= temp; d++) {
+    while (temp % d === 0) { factors.add(d); temp = Math.floor(temp / d); }
+  }
+  if (temp > 1) factors.add(temp);
+  return [...factors].sort((a, b) => a - b);
+}
+
+function factorizeFull(n) {
+  const map = {};
+  let temp = n;
+  for (let d = 2; d * d <= temp; d++) {
+    while (temp % d === 0) {
+      map[d] = (map[d] || 0) + 1;
+      temp = Math.floor(temp / d);
+    }
+  }
+  if (temp > 1) map[temp] = (map[temp] || 0) + 1;
+  return map;
+}
+
+function modPow(base, exp, mod) {
+  let result = 1n;
+  base = BigInt(base) % BigInt(mod);
+  exp = BigInt(exp);
+  mod = BigInt(mod);
+  while (exp > 0n) {
+    if (exp % 2n === 1n) result = result * base % mod;
+    exp = exp / 2n;
+    base = base * base % mod;
+  }
+  return Number(result);
+}
+
+// ── Main ─────────────────────────────────────────────────────
+function cariGenerator() {
+  const p      = parseInt(document.getElementById('inputP').value);
+  const start  = parseInt(document.getElementById('inputStart').value) || 2;
+  const count  = Math.min(parseInt(document.getElementById('inputCount').value) || 6, 30);
+  const out    = document.getElementById('output');
+
+  if (!p || p < 3) {
+    out.innerHTML = `<div class="error-msg">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      Masukkan bilangan prima p yang valid (minimal 3).
+    </div>`;
+    return;
+  }
+  if (!isPrime(p)) {
+    out.innerHTML = `<div class="error-msg">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      p = ${p} bukan bilangan prima! Coba prima seperti 3137, 2357, 19, atau 11.
+    </div>`;
+    return;
+  }
+
+  const n        = p - 1;
+  const fullFact = factorizeFull(n);
+  const primes   = primeFactors(n);
+  const divList  = primes.map(pi => `n / ${pi} = ${n} / ${pi} = ${n / pi}`);
+  const generators = [];
+
+  // ── Step 1 ──────────────────────────────────────────────
+  let html = `
+  <div class="step-card">
+    <div class="step-title">Langkah 1: Menghitung Orde Grup (n)</div>
+    <div class="code-block">n = p − 1
+n = ${p} − 1
+n = <strong>${n}</strong></div>
+  </div>`;
+
+  // ── Step 2 ──────────────────────────────────────────────
+  const factStr = Object.entries(fullFact)
+    .map(([b, e]) => e > 1 ? `${b}^${e}` : `${b}`)
+    .join(' × ');
+
+  const factSteps = (() => {
+    let lines = [], temp = n;
+    for (let d = 2; d * d <= temp; d++) {
+      while (temp % d === 0) {
+        lines.push(`${temp} ÷ ${d} = ${temp / d}`);
+        temp = temp / d;
+      }
+    }
+    if (temp > 1) lines.push(`${temp} adalah bilangan prima`);
+    return lines;
+  })();
+
+  html += `
+  <div class="step-card">
+    <div class="step-title">Langkah 2: Faktorisasi Prima dari n = ${n}</div>
+    <div class="code-block">${factSteps.join('\n')}
+
+Hasil: n = ${n} = <strong>${factStr}</strong>
+Himpunan Faktor Prima (pᵢ) = { <strong>${primes.join(', ')}</strong> }</div>
+  </div>`;
+
+  // ── Step 3 ──────────────────────────────────────────────
+  html += `
+  <div class="step-card">
+    <div class="step-title">Langkah 3: Hitung Eksponen Pengujian (n / pᵢ)</div>
+    <div class="code-block">${divList.join('\n')}</div>
+  </div>`;
+
+  // ── Step 4 ──────────────────────────────────────────────
+  html += `
+  <div class="step-card">
+    <div class="step-title">Langkah 4: Pengujian Kandidat Generator (α)</div>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1rem">
+      Syarat validasi: α adalah generator jika α<sup>(n/pᵢ)</sup> mod p ≠ 1 untuk <b>semua</b> faktor prima pᵢ.
+    </p>
+    <div class="alpha-grid">`;
+
+  for (let alpha = start; alpha < start + count && alpha < p; alpha++) {
+    let isGen = true;
+    let failAt = null;
+    const rows = [];
+
+    for (const pi of primes) {
+      const exp = n / pi;
+      const b   = modPow(alpha, exp, p);
+      const ok  = b !== 1;
+      if (!ok && isGen) { isGen = false; failAt = pi; }
+      rows.push({ pi, exp, b, ok });
+    }
+
+    if (isGen) generators.push(alpha);
+
+    html += `
+    <div class="alpha-card ${isGen ? 'is-gen' : 'not-gen'}">
+      <div class="alpha-header">
+        <span class="alpha-num">α = ${alpha}</span>
+        <span class="alpha-status ${isGen ? 'pass' : 'fail'}">${isGen ? 'GENERATOR' : 'BUKAN'}</span>
+      </div>
+      <div>`;
+
+    for (const r of rows) {
+      const stopHere = !r.ok;
+      html += `
+        <div class="test-row">
+          Uji pᵢ=${r.pi}: ${alpha}<sup>${r.exp}</sup> mod ${p} = <span class="val">${r.b}</span>
+          ${r.ok
+            ? `<span class="ok">≠ 1 ✓ Lolos</span>`
+            : `<span class="no">= 1 ✗ Gagal</span>`}
+        </div>`;
+      if (stopHere) {
+        html += `<div class="test-row" style="color:var(--dim); font-style:italic;">↳ Berhenti: Syarat tidak terpenuhi.</div>`;
+        break;
+      }
+    }
+
+    html += `</div></div>`;
+  }
+
+  html += `</div></div>`;
+
+  // ── Summary ──────────────────────────────────────────────
+  html += `
+  <div class="summary-card">
+    <h3>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+      Ringkasan Analisis (p = ${p})
+    </h3>`;
+
+  if (generators.length > 0) {
+    html += `
+    <p style="font-size:0.9rem;color:var(--muted);margin-bottom:1rem">
+      Ditemukan generator yang valid pada rentang α = ${start} s.d. ${start + count - 1}:
+    </p>
+    <div class="gen-list">
+      ${generators.map(g => `<span class="gen-chip">α = ${g}</span>`).join('')}
+    </div>
+    <p style="font-size:0.85rem;color:var(--muted);margin-top:1.5rem;border-top:1px solid var(--border-h);padding-top:1rem;">
+      Generator terkecil pada sesi ini: <strong style="color:var(--green);font-family:var(--mono);">α = ${generators[0]}</strong>
+    </p>`;
+  } else {
+    html += `
+    <p style="font-size:0.9rem;color:var(--red);">
+      Tidak ada generator yang ditemukan pada rentang α = ${start} s.d. ${start + count - 1}.<br>
+      Silakan perbesar rentang jumlah uji atau ubah nilai awal.
+    </p>`;
+  }
+
+  html += `</div>`;
+
+  out.innerHTML = html;
+}
+</script>
+</body>
+</html>
